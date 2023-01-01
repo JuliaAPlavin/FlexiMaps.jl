@@ -1,10 +1,28 @@
 flatmap!(f::Function, out, A) = flatten!(out, mapview(f, A))
 flatmap!(f_out::Function, f_in::Function, out, A) = flatten!(out, mapview(a -> mapview(b -> f_in(a, b), f_out(a)), A))
 
+"""
+    flatmap(f, X)
+
+Apply `f` to all elements of `X` and flatten the result by concatenating all `f(x)` collections.
+Similar to `mapreduce(f, vcat, X)`, more efficient and generic.
+
+    flatmap(fₒᵤₜ, fᵢₙ, X)
+
+Apply `fₒᵤₜ` to all elements of `X`, and apply `fᵢₙ` to the results. Basically, `[fᵢₙ(x, y) for x in X for y in fₒᵤₜ(x)]`.
+"""
+function flatmap end
+
 flatmap(f::Function, A) = flatten(mapview(f, A))
 flatmap(f_out::Function, f_in::Function, A) = flatten(mapview(a -> mapview(b -> f_in(a, b), f_out(a)), A))
 flatmap⁻(f_out, f_in::Function, A) = flatten(mapview(a -> mapview(b -> f_in(delete(a, f_out), b), f_out(a)), A))
 
+"""    flatten(X)
+
+Flatten a collection of collections by concatenating all elements.
+
+Similar to `reduce(vcat, X)`, but more generic and type-stable.
+"""
 function flatten(A)
     T = _eltype(_eltype(A))
     flatten(T, A)

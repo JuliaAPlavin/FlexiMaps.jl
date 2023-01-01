@@ -133,7 +133,12 @@ _searchsortedlast(A, v, invf::Function; rev=false) = searchsortedlast(parent(A),
 # only called for invertible functions: they are either increasing or decreasing
 _is_increasing(f) = f(2) < f(3)
 
+"""    mapview(f, X)
 
+Like `map(f, X)` but doesn't materialize the result and returns a view.
+
+Works on arrays, dicts, and arbitrary iterables. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
+"""
 mapview(f, X::AbstractArray{T, N}) where {T, N} = MappedArray{Core.Compiler.return_type(f, Tuple{T}), N}(f, X)
 mapview(f, X::Dict{K, V}) where {K, V} = MappedDict{K, Core.Compiler.return_type(f, Tuple{V})}(f, X)
 mapview(f, X) = MappedAny(f, X)
