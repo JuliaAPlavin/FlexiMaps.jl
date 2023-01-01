@@ -3,11 +3,12 @@ struct MappedArray{T, N, F, TX <: AbstractArray{<:Any, N}} <: AbstractArray{T, N
     parent::TX
 end
 MappedArray{T, N}(f, X) where {T, N} = MappedArray{T, N, typeof(f), typeof(X)}(f, X)
+Accessors.constructorof(::Type{<:MappedArray{T, N}}) where {T, N} = MappedArray{T, N}
 parent_type(::Type{<:MappedArray{T, N, F, TX}}) where {T, N, F, TX} = TX
 
 Base.@propagate_inbounds Base.getindex(A::MappedArray, I...) = _getindex(A, to_indices(A, I))
 Base.@propagate_inbounds _getindex(A::MappedArray, I::Tuple{Vararg{Integer}}) = _f(A)(parent(A)[I...])
-Base.@propagate_inbounds _getindex(A::MappedArray, I::Tuple) = typeof(A)(_f(A), parent(A)[I...])
+Base.@propagate_inbounds _getindex(A::MappedArray, I::Tuple) = @set parent(A) = parent(A)[I...]
 
 Base.@propagate_inbounds Base.setindex!(A::MappedArray, v, I...) = _setindex!(A, v, to_indices(A, I))
 Base.@propagate_inbounds _setindex!(A::MappedArray, v, I::Tuple{Vararg{Integer}}) = (parent(A)[I...] = set(parent(A)[I...], _f(A), v); A)
@@ -21,6 +22,7 @@ struct MappedDict{K, V, F, TX <: AbstractDict{K}} <: AbstractDict{K, V}
     parent::TX
 end
 MappedDict{K, V}(f, X) where {K, V} = MappedDict{K, V, typeof(f), typeof(X)}(f, X)
+Accessors.constructorof(::Type{<:MappedDict{K, V}}) where {K, V} = MappedDict{K, V}
 parent_type(::Type{<:MappedDict{K, V, F, TX}}) where {K, V, F, TX} = TX
 
 Base.@propagate_inbounds Base.getindex(A::MappedDict, I...) = _f(A)(parent(A)[I...])
@@ -83,6 +85,8 @@ Base.values(A::_MTT) = mapview(_f(A), values(parent(A)))
 Base.keytype(A::_MTT) = keytype(parent(A))
 Base.valtype(A::_MTT) = eltype(A)
 Base.reverse(A::_MTT; kwargs...) = mapview(_f(A), reverse(parent(A); kwargs...))
+
+Accessors.set(A::_MTT, ::typeof(parent), val) = constructorof(typeof(A))(_f(A), val)
 
 for type in (
         :Dims,
