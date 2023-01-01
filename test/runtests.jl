@@ -3,12 +3,6 @@ using TestItemRunner
 @run_package_tests
 
 
-@testitem "findonly" begin
-    @test @inferred(findonly(iseven, [11, 12])) == 2
-    @test_throws "more than one" findonly(isodd, [1, 2, 3])
-    @test_throws "no element" findonly(isodd, [2, 4])
-end
-
 @testitem "filtermap" begin
     using AxisKeys
 
@@ -114,6 +108,131 @@ end
     @test @inferred(flatten([StructVector(a=[1, 2])][1:0])) == []
     @test flatten(Any[[]]) == []
     @test flatten([]) == []
+end
+
+@testitem "mapview" begin
+    using FlexiMaps: MappedArray
+    using Accessors
+
+    @testset "array" begin
+        a = [1, 2, 3]
+        ma = @inferred mapview(@optic(_ + 1), a)
+        @test ma == [2, 3, 4]
+        @test ma isa AbstractVector{Int}
+        @test @inferred(ma[3]) == 4
+        @test @inferred(ma[CartesianIndex(3)]) == 4
+        @test @inferred(ma[2:3])::MappedArray == [3, 4]
+        @test @inferred(map(x -> x * 2, ma))::Vector{Int} == [4, 6, 8]
+        @test reverse(ma)::MappedArray == [4, 3, 2]
+        @test view(ma, 2:3)::SubArray == [3, 4]
+        @test size(similar(typeof(ma), 3)::Vector{Int}) == (3,)
+        
+        # ensure we get a view
+        a[2] = 20
+        @test ma == [2, 21, 4]
+
+        ma[3] = 11
+        ma[1:2] = [21, 31]
+        push!(ma, 101)
+        @test a == [20, 30, 10, 100]
+        @test ma == [21, 31, 11, 101]
+
+        ma = @inferred mapview(x -> (; x=x + 1), a)
+        @test ma.x::MappedArray{Int} == [21, 31, 11, 101]
+        @test parent(ma.x) === parent(ma) === a
+
+        # multiple arrays - not implemented
+        # ma = @inferred mapview((x, y) -> x + y, 1:3, [10, 20, 30])
+        # @test ma == [11, 22, 33]
+        # @test @inferred(ma[2]) == 22
+        # @test @inferred(ma[CartesianIndex(2)]) == 22
+
+        @testset "find" begin
+            ma = mapview(@optic(_ * 10), [1, 2, 2, 2, 3, 4])
+            @test findfirst(==(30), ma) == 5
+            @test findfirst(==(35), ma) |> isnothing
+            @test searchsortedfirst(ma, 20) == 2
+            @test searchsortedlast(ma, 20) == 4
+            @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
+            @test searchsortedlast(reverse(ma), 20; rev=true) == 5
+
+            ma = mapview(x -> x * 10, [1, 2, 2, 2, 3, 4])
+            @test findfirst(==(30), ma) == 5
+            @test findfirst(==(35), ma) |> isnothing
+            @test searchsortedfirst(ma, 20) == 2
+            @test searchsortedlast(ma, 20) == 4
+            @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
+            @test searchsortedlast(reverse(ma), 20; rev=true) == 5
+
+            ma = mapview(@optic(_ * -10), .- [1, 2, 2, 2, 3, 4])
+            @test findfirst(==(30), ma) == 5
+            @test findfirst(==(35), ma) |> isnothing
+            @test searchsortedfirst(ma, 20) == 2
+            @test searchsortedlast(ma, 20) == 4
+            @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
+            @test searchsortedlast(reverse(ma), 20; rev=true) == 5
+        end
+    end
+
+    @testset "dict" begin
+        a = Dict(:a => 1, :b => 2, :c => 3)
+        ma = @inferred mapview(@optic(_ + 1), a)
+        @test ma == Dict(:a => 2, :b => 3, :c => 4)
+        @test ma isa AbstractDict{Symbol, Int}
+        @test @inferred(ma[:c]) == 4
+        # ensure we get a view
+        a[:b] = 20
+        @test ma == Dict(:a => 2, :b => 21, :c => 4)
+
+        ma[:c] = 11
+        ma[:d] = 31
+        @test a == Dict(:a => 1, :b => 20, :c => 10, :d => 30)
+        @test ma == Dict(:a => 2, :b => 21, :c => 11, :d => 31)
+    end
+
+    @testset "iterator" begin
+        a = [1, 2, 3]
+        ma = @inferred mapview(x -> x + 1, (x for x in a))
+        @test ma == [2, 3, 4]
+        @test @inferred(eltype(ma)) == Int
+        @test @inferred(first(ma)) == 2
+        @test @inferred(collect(ma)) == [2, 3, 4]
+        @test @inferred(findmax(ma)) == (4, 3)
+        # ensure we get a view
+        a[2] = 20
+        @test ma == [2, 21, 4]
+    end
+end
+
+@testitem "maprange" begin
+    using Unitful
+    using AccessorsExtra
+
+    begin
+        @test maprange(identity, 1, 10, length=5) ≈ range(1, 10, length=5)
+        lr = @inferred maprange(log10, 0.1, 10, length=5)
+        @test lr ≈ [0.1, √0.1, 1, √10, 10]
+        for f in [log, log2, log10,] # @optic(log(0.1, _))] XXX - see my fix PR to InverseFunctions
+            lr = @inferred maprange(f, 0.1, 10, length=5)
+            @test lr ≈ [0.1, √0.1, 1, √10, 10]
+            lr = @inferred maprange(f, 10, 0.1, length=5)
+            @test lr ≈ [0.1, √0.1, 1, √10, 10] |> reverse
+        end
+
+        lr = @inferred maprange(@optic(log(ustrip(u"m", _))), 0.1u"m", 10u"m", length=5)
+        @test lr ≈ [0.1, √0.1, 1, √10, 10]u"m"
+        lr = @inferred maprange(@optic(log(ustrip(u"m", _))), 10u"cm", 10u"m", length=5)
+        @test lr ≈ [0.1, √0.1, 1, √10, 10]u"m"
+
+        @testset for a in [1, 10, 100, 1000, 1e-10, 1e10], b in [1, 10, 100, 1000, 1e-10, 1e10], len in [2:10; 12345]
+            rng = maprange(log, a, b, length=len)
+            @test length(rng) == len
+            a != b && @test allunique(rng)
+            @test issorted(rng, rev=a > b)
+            @test minimum(rng) == min(a, b)
+            @test maximum(rng) == max(a, b)
+        end
+    end
 end
 
 

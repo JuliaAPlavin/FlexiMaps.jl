@@ -1,21 +1,17 @@
 module FlexiMaps
 
-using Accessors: delete
+using Accessors
+using InverseFunctions
 
 export 
     filtermap,
+    mapview, maprange,
     flatmap, flatmap!, flatten, flatten!,
     findonly
 
 include("filtermap.jl")
+include("mapview.jl")
 include("flatmap.jl")
-
-function findonly(pred, A)
-    ix = findfirst(pred, A)
-    isnothing(ix) && throw(ArgumentError("no element satisfies the predicate"))
-    isnothing(findnext(pred, A, nextind(A, ix))) || throw(ArgumentError("more than one element satisfies the predicate"))
-    return ix
-end
 
 
 _eltype(::T) where {T} = _eltype(T)
