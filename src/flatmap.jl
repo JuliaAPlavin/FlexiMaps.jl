@@ -29,30 +29,17 @@ function flatten(A)
 end
 
 function flatten(::Type{T}, A) where {T}
-    if isconcretetype(T) || T isa Union
-        it = iterate(A)
-        if isnothing(it)
-            return _empty_from_type(_eltype(A), T)
-        end
-        afirst, state = it
-        arest = Iterators.rest(A, state)
-        out = _similar_with_content(afirst, T)
-        @assert out !== afirst
-        flatten!(out, arest)
-    else
-        it = iterate(A)
-        if isnothing(it)
-            return _empty_from_type(_eltype(A), T)  # T or Union{}?
-        end
-        afirst, state = it
-        arest = Iterators.rest(A, state)
-        out = _similar_with_content(afirst)
-        @assert out !== afirst
-        flatten!!(out, arest)
+    it = iterate(A)
+    if isnothing(it)
+        return _empty_from_type(_eltype(A), T)
     end
+    afirst, state = it
+    arest = Iterators.rest(A, state)
+    out = _similar_with_content(afirst, T)
+    flatten!!(out, arest)
 end
 
-function flatten!(out, A) 
+function flatten!(out, A)
     for a in A
         _out = append!(out, a)
         @assert _out === out  # e.g. AxisKeys may return something else from append!
@@ -132,12 +119,22 @@ function flatmap_parent(f, A)
 end
 
 
-_similar_with_content(A::AbstractVector, ::Type{T}) where {T} = similar(A, T, length(A)) .= A
-_similar_with_content(A::AbstractArray, ::Type{T}) where {T} = _similar_with_content(vec(A), T)
-_similar_with_content(A, ::Type{T}) where {T} = append!(T[], A)
-_similar_with_content(A::AbstractVector) = similar(A, length(A)) .= A
-_similar_with_content(A::AbstractArray) = _similar_with_content(vec(A))
-_similar_with_content(A) = append!(_eltype(A)[], A)
+@inline function _similar_with_content(A, T)
+    out = if isconcretetype(T) || T isa Union
+        _similar_with_content_concrete(A, T)
+    else
+        _similar_with_content_sameeltype(A)
+    end
+    @assert out !== A
+    return out
+end
+
+_similar_with_content_concrete(A::AbstractVector, ::Type{T}) where {T} = similar(A, T, length(A)) .= A
+_similar_with_content_concrete(A::AbstractArray, ::Type{T}) where {T} = _similar_with_content_concrete(vec(A), T)
+_similar_with_content_concrete(A, ::Type{T}) where {T} = append!(T[], A)
+_similar_with_content_sameeltype(A::AbstractVector) = similar(A, length(A)) .= A
+_similar_with_content_sameeltype(A::AbstractArray) = _similar_with_content_sameeltype(vec(A))
+_similar_with_content_sameeltype(A) = append!(_eltype(A)[], A)
 
 _empty_from_type(::Type, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{Union{}}, ::Type{T}) where {T} = T[]
