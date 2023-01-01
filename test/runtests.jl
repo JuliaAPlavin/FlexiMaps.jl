@@ -298,6 +298,67 @@ end
 end
 
 
+@testitem "LogRange" begin
+    # test from https://github.com/JuliaLang/julia/pull/39071
+    const LogRange = (a, b, l) -> maprange(log, a, b, length=l)
+
+    # basic idea
+    @test LogRange(2, 16, 4) ≈ [2, 4, 8, 16]
+    @test LogRange(1/8, 8.0, 7) ≈ [0.125, 0.25, 0.5, 1.0, 2.0, 4.0, 8.0]
+    @test LogRange(1000, 1, 4) ≈ [1000, 100, 10, 1]
+    @test LogRange(1, 10^9, 19)[1:2:end] ≈ 10 .^ (0:9)
+
+    # negative & complex
+    # @test LogRange(-1, -4, 3) == [-1, -2, -4]
+    # @test LogRange(1, -1+0.0im, 3) == [1, im, -1]
+    # @test LogRange(1, -1-0.0im, 3) == [1, -im, -1]
+
+    # endpoints
+    @test LogRange(0.1f0, 100, 33)[1] === 0.1f0
+    @test LogRange(0.789, 123_456, 135_790)[[begin, end]] == [0.789, 123_456]
+    @test LogRange(nextfloat(0f0), floatmax(Float32), typemax(Int))[end] === floatmax(Float32)
+    @test LogRange(nextfloat(Float16(0)), floatmax(Float16), 66_000)[end] === floatmax(Float16)
+    @test first(LogRange(pi, 2pi, 3000)) === LogRange(pi, 2pi, 3000)[1] === Float64(pi)
+    @test last(LogRange(0.01, 0.1, 3000)) === 0.1
+    # @test last(LogRange(-0.01, -0.1, 3000)) === last(LogRange(-0.01, -0.1, 3000))[end] === -0.1
+    if Int == Int64
+        @test LogRange(0.1, 1000, 2^54)[end] === 1000.0
+        # @test LogRange(-0.1, -1000, 2^55)[end] === -1000.0
+    end
+
+    # empty, only, NaN, Inf
+    # @test first(LogRange(1, 2, 0)) === 1.0
+    # @test last(LogRange(1, 2, 0)) === 2.0
+    # @test isnan(first(LogRange(0, 2, 0)))
+    @test only(LogRange(2pi, 2pi, 1)) === LogRange(2pi, 2pi, 1)[1] === 2pi
+    # @test isnan(LogRange(1, NaN, 3)[2])
+    # @test isinf(LogRange(1, Inf, 3)[2])
+    # @test isnan(LogRange(0, 2, 3)[1])
+
+    # types
+    @test eltype(LogRange(1, 10, 3)) == Float64
+    @test eltype(LogRange(1, 10, Int32(3))) == Float64
+    @test eltype(LogRange(1, 10f0, 3)) == Float32
+    @test eltype(LogRange(1f0, 10, 3)) == Float32
+    # @test eltype(LogRange(1f0, 10+im, 3)) == ComplexF32
+    # @test eltype(LogRange(1f0, 10.0+im, 3)) == ComplexF64
+    @test eltype(LogRange(1, big(10), 3)) == BigFloat
+    @test LogRange(big"0.3", big(pi), 50)[1] == big"0.3"
+    @test LogRange(big"0.3", big(pi), 50)[end] == big(pi)
+
+    # errors
+    @test_throws ArgumentError LogRange(1, 10, -1)
+    @test_throws ArgumentError LogRange(1, 10, 1) # endpoints must differ
+    @test_throws DomainError LogRange(1, -1, 3)   # needs complex numbers
+    @test_throws ArgumentError LogRange(1, 10, 2)[true]
+    @test_throws BoundsError LogRange(1, 10, 2)[3]
+
+    # # printing
+    # @test repr(LogRange(1,2,3)) == "LogRange(1.0, 2.0, 3)"
+    # @test repr("text/plain", LogRange(1,2,3)) == "3-element LogRange{Float64}:\n 1.0, 1.41421, 2.0"
+end
+
+
 @testitem "_" begin
     import Aqua
     Aqua.test_all(FlexiMaps; ambiguities=false)
