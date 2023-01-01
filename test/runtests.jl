@@ -112,7 +112,13 @@ end
     
     a = @inferred(flatten([StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])]))::StructArray
     @test a == [(a=1,), (a=2,), (a=1,), (a=2,), (a=3,)]
-    @test a.a == [1, 2, 1, 2, 3]
+    @test a.a::Vector{Int} == [1, 2, 1, 2, 3]
+    a = @inferred(flatten([view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2, 3]), 1:1:3)]))::StructArray
+    @test a.a::Vector{Int} == [1, 2, 1, 2, 3]
+    a = @inferred(flatten([view(StructVector(a=[1, 2]), 1:1:2)]))::StructArray
+    @test a.a::Vector{Int} == [1, 2]
+    a = @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2),)))::StructArray
+    @test a.a::Vector{Int} == [1, 2]
 
     @test_throws "_out === out" flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)])
     a = @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray
