@@ -37,6 +37,7 @@ function flatten(::Type{T}, A) where {T}
         afirst, state = it
         arest = Iterators.rest(A, state)
         out = _similar_with_content(afirst, T)
+        @assert out !== afirst
         flatten!(out, arest)
     else
         it = iterate(A)
@@ -46,6 +47,7 @@ function flatten(::Type{T}, A) where {T}
         afirst, state = it
         arest = Iterators.rest(A, state)
         out = _similar_with_content(afirst)
+        @assert out !== afirst
         flatten!!(out, arest)
     end
 end
