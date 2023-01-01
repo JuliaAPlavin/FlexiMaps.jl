@@ -102,7 +102,7 @@ end
 
     @test @inferred(flatten((v for v in [1:1, 1:2, 1:3])))::Vector{Int} == [1, 1,2, 1,2,3]
     @test @inferred(flatten((v for v in [1:1, 1:2, 1:3] if length(v) > 100)))::Vector{Int} == []
-    @test_broken @inferred(flatten((v for v in [1:1, 1:2, 1:3] if false)))::Vector{Int} == []
+    @test @inferred(flatten((v for v in [1:1, 1:2, 1:3] if false)))::Vector{Int} == []
     @test @inferred(flatten([(1, 2), (3, 4)]))::Vector{Int} == [1, 2, 3, 4]
     @test @inferred(flatten([(1, 2), (3,)]))::Vector{Int} == [1, 2, 3]
     @test @inferred(flatten(((1, 2), (3, 4))))::Vector{Int} == [1, 2, 3, 4]

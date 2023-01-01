@@ -27,4 +27,7 @@ function _eltype(::Type{T}) where {T}
     # ET === Union{} ? Any : ET
 end
 
+# needed for proper _eltype of inferrably-empty iterators
+_eltype(x::Base.Generator) = Core.Compiler.return_type(x.f, Tuple{_eltype(x.iter)})
+
 end
