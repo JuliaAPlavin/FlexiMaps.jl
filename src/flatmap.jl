@@ -31,7 +31,7 @@ end
 # abstractvectors do reduce(vcat), but MappedArray should use the generic method
 flatten(::Type{T}, A::MappedArray) where {T} = Base.@invoke flatten(T::Type{T}, A::Any)
 
-function flatten(::Type{T}, A::AbstractVector{<:AbstractVector}) where {T}
+function flatten(::Type{T}, A::Base.AbstractVecOrTuple{<:AbstractVector}) where {T}
     if !(isconcretetype(T) || T isa Union)
         return Base.@invoke flatten(T::Type{T}, A::Any)
     end

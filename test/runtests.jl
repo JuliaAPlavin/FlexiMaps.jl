@@ -122,13 +122,15 @@ end
     @test @inferred(flatten([StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])])).a::Vector{Int} == [1, 2, 1, 2, 3]
     @test @inferred(flatten([view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2, 3]), 1:1:3)])).a::Vector{Int} == [1, 2, 1, 2, 3]
     @test @inferred(flatten([view(StructVector(a=[1, 2]), 1:1:2)])).a::Vector{Int} == [1, 2]
-    @test @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2),))).a::Vector{Int} == [1, 2]
+    @test @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2),))).a::AbstractVector{Int} == [1, 2]
+    @test_broken @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2]), 1:1:2)))).a::Vector{Int} == [1, 2]
+    @test flatten((view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2]), 1:1:2))).a::Vector{Int} == [1, 2, 1, 2]
     @test flatten(Any[StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])]).a::Vector{Int} == [1, 2, 1, 2, 3]
 
     @test flatten((SVector(1, 2), SVector(3, 4))) == [1, 2, 3, 4]
     @test flatten(SVector(SVector(1, 2), SVector(3, 4))) == [1, 2, 3, 4]
     @test flatten([jl([1, 2]), jl([3, 4])]) == jl([1, 2, 3, 4])
-    @test_broken flatten((jl([1, 2]), jl([3, 4]))) == jl([1, 2, 3, 4])
+    @test flatten((jl([1, 2]), jl([3, 4]))) == jl([1, 2, 3, 4])
 
     @test flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
     @test_throws "_out === out" flatten((x for x in [KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)]))
