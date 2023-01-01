@@ -5,6 +5,7 @@ using TestItemRunner
 
 @testitem "filtermap" begin
     using AxisKeys
+    using OffsetArrays
 
     X = 1:10
     Y = filtermap(x -> x % 3 == 0 ? Some(x^2) : nothing, X)
@@ -16,6 +17,7 @@ using TestItemRunner
 
     @test filtermap(x -> x % 3 == 0 ? Some(x^2) : nothing, (1, 2, 3, 4, 5, 6)) === (9, 36)
 
+    @test_broken filtermap(x -> isodd(x) ? Some(x^2) : nothing, OffsetArray([1, 2, 3], 5))::Vector{Int} == [1, 9]
     @test filtermap(x -> isodd(x) ? Some(x^2) : nothing, KeyedArray([1, 2, 3], x=[10, 20, 30]))::KeyedArray == KeyedArray([1, 9], x=[10, 30])
 end
 
