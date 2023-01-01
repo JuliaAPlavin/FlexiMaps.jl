@@ -16,6 +16,26 @@ filtermap(x -> x % 3 == 0 ? x^2 : nothing, 1:10) == [9, 36, 81]
 
 _Analogous to `filter_map` in Rust_
 
+## `flatmap`/`flatten`
+
+These functions are similar to `Iterators.flatmap` and `Iterators.flatten`, but operate on arrays in a more performant and generic manner.
+
+`flatmap(f, X)`: apply `f` to all elements of `X` and flatten the result by concatenating all `f(x)` collections.
+
+`flatmap(fₒᵤₜ, fᵢₙ, X)`: apply `fₒᵤₜ` to all elements of `X`, and apply `fᵢₙ` to the results. Basically, `[fᵢₙ(x, y) for x in X for y in fₒᵤₜ(x)]`.
+
+`flatmap(f, X)` is similar to `mapreduce(f, vcat, X)` and `SplitApplyCombine.mapmany(f, A)`, but more efficient and generic.
+
+Defining differences include:
+- better result type inference
+- keeps array types, eg `StructArray`
+- works with empty collections
+- supports arbitrary iterators, not only arrays
+
+_Analogous to `flat_map` in Rust, and `SelectMany` in C#_
+
+`flatten(X)`: flatten a collection of collections by concatenating all elements, equivalent to `flatmap(identity, X)`.
+
 ## `mapview`
 
 `mapview(f, X)`: like `map(f, X)` but doesn't materialize the result and returns a view.
@@ -56,22 +76,14 @@ julia> X
   4.0
 ```
 
-## `flatmap`/`flatten`
+# `maprange`
 
-These functions are similar to `Iterators.flatmap` and `Iterators.flatten`, but operate on arrays in a more performant and generic manner.
+`maprange(f, start, stop; length)`: `length` values between `start` and `stop`, so that `f(x)` is incremented in uniform steps. Uses `mapview` in order not to materialize the array.
 
-`flatmap(f, X)`: apply `f` to all elements of `X` and flatten the result by concatenating all `f(x)` collections.
+`maprange(identity, ...)` is equivalent to `range(...)`. Most common application - log-spaced ranges:
 
-`flatmap(fₒᵤₜ, fᵢₙ, X)`: apply `fₒᵤₜ` to all elements of `X`, and apply `fᵢₙ` to the results. Basically, `[fᵢₙ(x, y) for x in X for y in fₒᵤₜ(x)]`.
+`maprange(log, 10, 1000, length=5) ≈ [10, 31.6227766, 100, 316.227766, 1000]`
 
-`flatmap(f, X)` is similar to `mapreduce(f, vcat, X)` and `SplitApplyCombine.mapmany(f, A)`, but more efficient and generic.
+Other transformations can also be useful:
 
-Defining differences include:
-- better result type inference
-- keeps array types, eg `StructArray`
-- works with empty collections
-- supports arbitrary iterators, not only arrays
-
-_Analogous to `flat_map` in Rust, and `SelectMany` in C#_
-
-`flatten(X)`: flatten a collection of collections by concatenating all elements, equivalent to `flatmap(identity, X)`.
+`maprange(sqrt, 16, 1024, length=5) == [16, 121, 324, 625, 1024]`
