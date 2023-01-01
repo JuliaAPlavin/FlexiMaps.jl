@@ -7,14 +7,29 @@ flatmap⁻(f_out, f_in::Function, A) = flatten(mapview(a -> mapview(b -> f_in(de
 
 function flatten(A)
     T = _eltype(_eltype(A))
-    it = iterate(A)
-    if isnothing(it)
-        return _empty_from_type(_eltype(A), T)
+    flatten(T, A)
+end
+
+function flatten(::Type{T}, A) where {T}
+    if isconcretetype(T) || T isa Union
+        it = iterate(A)
+        if isnothing(it)
+            return _empty_from_type(_eltype(A), T)
+        end
+        afirst, state = it
+        arest = Iterators.rest(A, state)
+        out = _similar_with_content(afirst, T)
+        flatten!(out, arest)
+    else
+        it = iterate(A)
+        if isnothing(it)
+            return _empty_from_type(_eltype(A), T)  # T or Union{}?
+        end
+        afirst, state = it
+        arest = Iterators.rest(A, state)
+        out = _similar_with_content(afirst)
+        flatten!!(out, arest)
     end
-    afirst, state = it
-    arest = Iterators.rest(A, state)
-    out = _similar_with_content(afirst, T)
-    flatten!(out, arest)
 end
 
 function flatten!(out, A) 
@@ -25,10 +40,25 @@ function flatten!(out, A)
     out
 end
 
+function flatten!!(out, A) 
+    for a in A
+        if _eltype(a) <: _eltype(out)
+            _out = append!(out, a)
+            @assert _out === out  # e.g. AxisKeys may return something else from append!
+        else
+            out = vcat(out, a)
+        end
+    end
+    out
+end
+
 
 _similar_with_content(A::AbstractVector, ::Type{T}) where {T} = similar(A, T) .= A
 _similar_with_content(A::AbstractArray, ::Type{T}) where {T} = _similar_with_content(vec(A), T)
 _similar_with_content(A, ::Type{T}) where {T} = append!(T[], A)
+_similar_with_content(A::AbstractVector) = similar(A) .= A
+_similar_with_content(A::AbstractArray) = _similar_with_content(vec(A))
+_similar_with_content(A) = append!(_eltype(A)[], A)
 
 _empty_from_type(::Type, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{Union{}}, ::Type{T}) where {T} = T[]
