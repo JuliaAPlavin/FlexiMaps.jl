@@ -59,9 +59,9 @@ end
     using StructArrays
 
     X = [(a=[1, 2],), (a=[3, 4],)]
-    @test flatmap(x -> x.a, (x, a) -> (a, sum(x.a)), X) == [(1, 3), (2, 3), (3, 7), (4, 7)]
+    @test @inferred(flatmap(x -> x.a, (x, a) -> (a, sum(x.a)), X)) == [(1, 3), (2, 3), (3, 7), (4, 7)]
 
-    @test flatmap(x -> x.a, (x, a) -> (a, sum(x.a)), X[1:0])::Vector{Int} == []
+    @test @inferred(flatmap(x -> x.a, (x, a) -> (a, sum(x.a)), X[1:0])) == []
 
     out = Tuple{Int, Int}[]
     @test flatmap!(x -> x.a, (x, a) -> (a, sum(x.a)), out, X) === out == [(1, 3), (2, 3), (3, 7), (4, 7)]
@@ -76,8 +76,12 @@ end
         @test cnt_in[] == 3
     end
 
-    Y = flatmap(x -> StructArray(;x.a), (x, a) -> (a, sum(x.a)), X)
+    Y = @inferred flatmap(x -> StructArray(;x.a), (x, a) -> (a, sum(x.a)), X)
     @test Y == [((a=1,), 3), ((a=2,), 3), ((a=3,), 7), ((a=4,), 7)]
+    @test Y isa StructArray
+
+    Y = @inferred flatmap(x -> StructArray(;x.a), (x, a) -> (a, sum(x.a)), X[1:0])
+    @test Y == []
     @test Y isa StructArray
 end
 
@@ -85,7 +89,8 @@ end
     using FilterMaps: flatmap⁻
     using Accessors
 
-    flatmap⁻(@optic(_.vals), (x, v) -> (;x..., v), [(a=1, vals=[2, 3]), (a=4, vals=[5])]) == [(a=1, v=2), (a=1, v=3), (a=4, v=5)]
+    @test @inferred(flatmap⁻(@optic(_.vals), (x, v) -> (;x..., v), [(a=1, vals=[2, 3]), (a=4, vals=[5])])) == [(a=1, v=2), (a=1, v=3), (a=4, v=5)]
+    @test @inferred(flatmap⁻(@optic(_.vals), (x, v) -> (;x..., v), [(a=1, vals=[2, 3]), (a=4, vals=[5])][1:0])) == []
 end
 
 @testitem "flatten" begin

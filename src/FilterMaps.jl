@@ -28,6 +28,4 @@ function _eltype(::Type{T}) where {T}
     ET === Union{} ? Any : ET
 end
 
-_valtype(X) = _eltype(values(X))
-
 end
