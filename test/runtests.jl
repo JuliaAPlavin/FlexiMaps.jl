@@ -235,11 +235,11 @@ end
     using Unitful
     using AccessorsExtra
 
-    begin
+    let
         @test maprange(identity, 1, 10, length=5) ≈ range(1, 10, length=5)
         lr = @inferred maprange(log10, 0.1, 10, length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]
-        for f in [log, log2, log10,] # @optic(log(0.1, _))] XXX - see my fix PR to InverseFunctions
+        for f in [log, log2, log10, @optic(log(0.1, _))]
             lr = @inferred maprange(f, 0.1, 10, length=5)
             @test lr ≈ [0.1, √0.1, 1, √10, 10]
             lr = @inferred maprange(f, 10, 0.1, length=5)
