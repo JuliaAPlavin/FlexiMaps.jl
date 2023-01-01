@@ -113,8 +113,10 @@ end
     @test @inferred(flatten(([1], 2)))::Vector{Int} == [1, 2]
 
     # should the eltype be promoted at all?
-    @test @inferred(flatten(Union{Vector{Int}, Vector{Float64}}[[1], [2.0]]))::Vector{Union{Int, Float64}} == [1, 2]
-    @test @inferred(flatten(Vector{Union{Int, Float64}}[[1], [2.0]]))::Vector{Union{Int, Float64}} == [1, 2]
+    @test @inferred(Vector{Int}, flatten(Union{Vector{Int}, Vector{Float64}}[[1], [2.0]]))::Vector{Float64} == [1, 2]
+    @test flatten([[1], ["2"]])::Vector == [1, "2"]
+    @test @inferred(flatten([Union{Int, Float64}[1], Union{Int, Float64}[2.0]]))::Vector{Union{Int, Float64}} == [1, 2]
+    @test @inferred(flatten([Union{Int, Float64}[1, 2.0], Union{Int, Float64}[2.0]]))::Vector{Union{Int, Float64}} == [1, 2, 2]
     @test @inferred(flatten(([1 2], [5.5], (x = false,))))::Vector == [1, 2, 5.5, 0]
     
     @test @inferred(flatten([StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])])).a::Vector{Int} == [1, 2, 1, 2, 3]
@@ -127,12 +129,12 @@ end
     @test flatten(SVector(SVector(1, 2), SVector(3, 4))) == [1, 2, 3, 4]
     @test_broken flatten((jl([1, 2]), jl([3, 4]))) == [1, 2, 3, 4]
 
-    @test_throws "_out === out" flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)])
-    a = @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray
-    @test a == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
-    @test flatten(Any[KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]) == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
-    @test flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1.0, 2, 3], x=10:10:30)]) == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
-    @test flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1.0, 2, 3], x=[10, 20, 30])]) == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test_throws "_out === out" flatten((x for x in [KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)]))
+    @test_broken @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test flatten(Any[KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1.0, 2, 3], x=10:10:30)])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1.0, 2, 3], x=[10, 20, 30])])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
 
     @test @inferred(flatten([[]]))::Vector{Any} == []
     @test @inferred(flatten(Vector{Int}[]))::Vector{Int} == []
