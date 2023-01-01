@@ -131,7 +131,7 @@ end
 
     @test flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
     @test_throws "_out === out" flatten((x for x in [KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)]))
-    @test_broken @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
     @test flatten(Any[KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
     @test flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1.0, 2, 3], x=10:10:30)])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
     @test flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1.0, 2, 3], x=[10, 20, 30])])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
