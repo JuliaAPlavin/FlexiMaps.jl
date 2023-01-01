@@ -40,7 +40,7 @@ end
     @test @inferred(flatmap(i -> 1:i, [1 3; 2 4]))::Vector{Int} == [1, 1,2, 1,2,3, 1,2,3,4]
     @test @inferred(flatmap(i -> reshape(1:i, 2, :), [2, 4]))::Vector{Int} == [1, 2, 1, 2, 3, 4]
 
-    @test_broken flatmap(i -> 1:i, [1][1:0]) == []
+    @test @inferred(flatmap(i -> 1:i, [1][1:0]))::Vector{Int} == []
     @test @inferred(flatmap(i -> collect(1:i), [1][1:0]))::Vector{Int} == []
     @test @inferred(flatmap(i -> (j for j in 1:i), (i for i in 1:0)))::Vector{Int} == []
 
@@ -95,6 +95,21 @@ end
     out = Int[]
     @test flatten!(out, [1:1, 1:2, 1:3]) === out == [1, 1,2, 1,2,3]
 
+    @test @inferred(flatten((v for v in [1:1, 1:2, 1:3])))::Vector{Int} == [1, 1,2, 1,2,3]
+    @test @inferred(flatten((v for v in [1:1, 1:2, 1:3] if length(v) > 100)))::Vector{Int} == []
+    @test_broken @inferred(flatten((v for v in [1:1, 1:2, 1:3] if false)))::Vector{Int} == []
+    @test @inferred(flatten([(1, 2), (3, 4)]))::Vector{Int} == [1, 2, 3, 4]
+    @test @inferred(flatten([(1, 2), (3,)]))::Vector{Int} == [1, 2, 3]
+    @test @inferred(flatten(((1, 2), (3, 4))))::Vector{Int} == [1, 2, 3, 4]
+    @test @inferred(flatten(((1, 2), (3,))))::Vector{Int} == [1, 2, 3]
+    @test @inferred(flatten(([1, 2], [3, 4])))::Vector{Int} == [1, 2, 3, 4]
+    @test @inferred(flatten([(1, :a), (2, :b)]))::Vector{Union{Int64, Symbol}} == [1, :a, 2, :b]
+    @test @inferred(flatten(((1, :a), (:b, 2))))::Vector{Any} == [1, :a, :b, 2]
+    @test @inferred(flatten(([1], 2)))::Vector{Int} == [1, 2]
+
+    @test @inferred(flatten(([1 2], [5.5], (x = false,)))) == [1, 2, 5.5, 0]  # should the eltype be promoted at all?
+    @test_broken @inferred(flatten(([1 2], [5.5], (x = false,))))::Vector{Float64} == [1, 2, 5.5, 0]  # should the eltype be promoted at all?
+    
     a = @inferred(flatten([StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])]))::StructArray
     @test a == [(a=1,), (a=2,), (a=1,), (a=2,), (a=3,)]
     @test a.a == [1, 2, 1, 2, 3]
@@ -103,8 +118,9 @@ end
     a = @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray
     @test a == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
 
-    @test @inferred(flatten([[]])) == []
-    @test @inferred(flatten(Vector{Int}[])) == []
+    @test @inferred(flatten([[]]))::Vector{Any} == []
+    @test @inferred(flatten(Vector{Int}[]))::Vector{Int} == []
+    @test @inferred(flatten(()))::Vector{Union{}} == []
     @test @inferred(flatten([StructVector(a=[1, 2])][1:0])) == []
     @test flatten(Any[[]]) == []
     @test flatten([]) == []

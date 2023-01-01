@@ -78,6 +78,8 @@ _similar_with_content(A::AbstractArray, ::Type{T}) where {T} = _similar_with_con
 _similar_with_content(A, ::Type{T}) where {T} = append!(T[], A)
 
 _empty_from_type(::Type, ::Type{T}) where {T} = T[]
+_empty_from_type(::Type{Union{}}, ::Type{T}) where {T} = T[]
+_empty_from_type(::Type{<:AbstractRange}, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{AT}, ::Type{T}) where {AT <: AbstractArray, T} = similar(similar(AT, 0), T)
 
 
