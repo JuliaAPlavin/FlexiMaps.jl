@@ -92,6 +92,8 @@ end
 @testitem "flatten" begin
     using AxisKeys
     using StructArrays
+    using StaticArrays
+    using JLArrays: jl
 
     @test @inferred(flatten([1:1, 1:2, 1:3]))::Vector{Int} == [1, 1,2, 1,2,3]
     @test flatten(Any[1:1, 1:2, 1:3])::Vector{Int} == [1, 1,2, 1,2,3]
@@ -120,6 +122,10 @@ end
     @test @inferred(flatten([view(StructVector(a=[1, 2]), 1:1:2)])).a::Vector{Int} == [1, 2]
     @test @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2),))).a::Vector{Int} == [1, 2]
     @test flatten(Any[StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])]).a::Vector{Int} == [1, 2, 1, 2, 3]
+
+    @test flatten((SVector(1, 2), SVector(3, 4))) == [1, 2, 3, 4]
+    @test flatten(SVector(SVector(1, 2), SVector(3, 4))) == [1, 2, 3, 4]
+    @test_broken flatten((jl([1, 2]), jl([3, 4]))) == [1, 2, 3, 4]
 
     @test_throws "_out === out" flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)])
     a = @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray
