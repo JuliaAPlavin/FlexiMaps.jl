@@ -28,9 +28,9 @@ end
     @test @inferred(flatmap(i->1:i, 0:3))::Vector{Int} == [1, 1,2, 1,2,3]
     @test @inferred(flatmap(i -> i == 0 ? [nothing] : 1:i, 0:3))::Vector{Union{Int,Nothing}} == [nothing, 1, 1,2, 1,2,3]
 
-    a = @inferred(flatmap(i -> StructVector(a=1:i), [2, 3]))::StructArray
-    @test a == [(a=1,), (a=2,), (a=1,), (a=2,), (a=3,)]
-    @test a.a == [1, 2, 1, 2, 3]
+    @test @inferred(flatmap(i -> StructVector(a=1:i), [2, 3])).a::Vector{Int} == [1, 2, 1, 2, 3]
+    @test (flatmap(i -> StructVector(a=1:i), Any[2, 3])).a::Vector{Int} == [1, 2, 1, 2, 3]
+    @test (flatmap(i -> i > 10 ? 123 : StructVector(a=1:i), Any[2, 3])).a::Vector{Int} == [1, 2, 1, 2, 3]
 
     let
         cnt = Ref(0)
