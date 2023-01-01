@@ -58,6 +58,8 @@ julia> X
 
 ## `flatmap`/`flatten`
 
+These functions are similar to `Iterators.flatmap` and `Iterators.flatten`, but operate on arrays in a more performant and generic manner.
+
 `flatmap(f, X)`: apply `f` to all elements of `X` and flatten the result by concatenating all `f(x)` collections.
 
 `flatmap(fₒᵤₜ, fᵢₙ, X)`: apply `fₒᵤₜ` to all elements of `X`, and apply `fᵢₙ` to the results. Basically, `[fᵢₙ(x, y) for x in X for y in fₒᵤₜ(x)]`.
