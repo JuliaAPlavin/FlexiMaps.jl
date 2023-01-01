@@ -71,6 +71,65 @@ function flatten!!(out, A)
 end
 
 
+function flatten_parent(A)
+    @assert allequal(parent(a) for a in A)
+    out = similar(parent(first(A)))
+    for a in A
+        out[parentindices(a)...] .= a
+    end
+    return out
+end
+
+"""    flatmap_parent(f, A)
+
+Returns a collection consisting of all elements of each `f(a)`, similar to `flatmap(f, A)`.
+
+Each element of `A` should be a `view` of the same parent array, and these views together should cover all elements of the parent.
+Elements of the result are in the same order as the corresponding elements in the parent array of `a`s.
+
+# Examples
+```
+julia> a = [10, 20, 30, 40, 50]
+
+julia> avs = [view(a, [2, 5]), view(a, [3, 1, 4])]
+2-element Vector{SubArray{Int64, 1, Vector{Int64}, Tuple{Vector{Int64}}, false}}:
+ [20, 50]
+ [30, 10, 40]
+
+# multiply by 2 and reassemble in the original order
+julia> flatmap_parent(av -> 2 .* av, avs)
+5-element Vector{Int64}:
+  20
+  40
+  60
+  80
+ 100
+```
+"""
+function flatmap_parent(f, A)
+    Am = mapview(f, A)
+    T = _eltype(_eltype(Am))
+    it = iterate(A)
+    if isnothing(it)
+        return _empty_from_type(_eltype(A), T)
+    end
+    afirst, state = it
+    amfirst, mstate = iterate(Am)
+    par = parent(afirst)
+    out = similar(amfirst, T, axes(par))
+    assigned_indices = fill(false, axes(par))
+    out[parentindices(afirst)...] .= amfirst
+    assigned_indices[parentindices(afirst)...] .= true
+    for (a, am) in zip(Iterators.rest(A, state), Iterators.rest(Am, mstate))
+        parent(a) === par || throw(ArgumentError("expected all entries to be `view`s of the same parent array"))
+        out[parentindices(a)...] .= am
+        assigned_indices[parentindices(a)...] .= true
+    end
+    all(assigned_indices) || throw(ArgumentError("all indices must be covered"))
+    return out
+end
+
+
 _similar_with_content(A::AbstractVector, ::Type{T}) where {T} = similar(A, T) .= A
 _similar_with_content(A::AbstractArray, ::Type{T}) where {T} = _similar_with_content(vec(A), T)
 _similar_with_content(A, ::Type{T}) where {T} = append!(T[], A)

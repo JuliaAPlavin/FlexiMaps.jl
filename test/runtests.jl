@@ -137,6 +137,26 @@ end
     @test @inferred(flatten(())) == []
 end
 
+@testitem "flatten parentindices" begin
+    using StructArrays
+
+    a = [10, 20, 30, 40, 50]
+    avs = [view(a, [2, 5]), view(a, [3, 1, 4])]
+    @test @inferred(flatten_parent(avs))::Vector{Int} == a
+    @test @inferred(flatmap_parent(av -> 2 .* av, avs))::Vector{Int} == 2 .* a
+    @test @inferred(flatmap_parent(av -> 2 .* av, (av for av in avs)))::Vector{Int} == 2 .* a
+    @test @inferred(flatmap_parent(av -> StructArray(x=2 .* av), avs)).x == 2 .* a
+
+    @test_throws "same parent" flatmap_parent(av -> 2 .* av, collect.(avs))
+    @test_throws "must be covered" flatmap_parent(av -> 2 .* av, avs[1:1])
+
+    let
+        cnt = Ref(0)
+        @test flatmap_parent(av -> av .+ (cnt[] += 1), avs)::Vector{Int} == [12, 21, 32, 42, 51]
+        @test cnt[] == 2
+    end
+end
+
 @testitem "mapview" begin
     using FlexiMaps: MappedArray
     using Accessors
@@ -173,6 +193,10 @@ end
         # @test ma == [11, 22, 33]
         # @test @inferred(ma[2]) == 22
         # @test @inferred(ma[CartesianIndex(2)]) == 22
+
+        ma = @inferred mapview(x -> x + 1, view([10, 20, 30], 2:3))
+        @test ma == [21, 31]
+        @test_broken parentindices(ma) == (2:3,)  # should it work? how to reconcile with parent()?
 
         @testset "find" begin
             ma = mapview(@optic(_ * 10), [1, 2, 2, 2, 3, 4])

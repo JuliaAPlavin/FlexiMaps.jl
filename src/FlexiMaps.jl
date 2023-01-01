@@ -6,7 +6,8 @@ using InverseFunctions
 export 
     filtermap,
     mapview, maprange,
-    flatmap, flatmap!, flatten, flatten!
+    flatmap, flatmap!, flatten, flatten!,
+    flatten_parent, flatmap_parent
 
 include("filtermap.jl")
 include("mapview.jl")
