@@ -1,1 +1,1 @@
-# FilterMaps.jl
+# FlexiMaps.jl

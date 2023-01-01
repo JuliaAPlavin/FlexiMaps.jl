@@ -86,7 +86,7 @@ end
 end
 
 @testitem "flatmap⁻" begin
-    using FilterMaps: flatmap⁻
+    using FlexiMaps: flatmap⁻
     using Accessors
 
     @test @inferred(flatmap⁻(@optic(_.vals), (x, v) -> (;x..., v), [(a=1, vals=[2, 3]), (a=4, vals=[5])])) == [(a=1, v=2), (a=1, v=3), (a=4, v=5)]
@@ -119,8 +119,8 @@ end
 
 @testitem "_" begin
     import Aqua
-    Aqua.test_all(FilterMaps; ambiguities=false)
-    Aqua.test_ambiguities(FilterMaps)
+    Aqua.test_all(FlexiMaps; ambiguities=false)
+    Aqua.test_ambiguities(FlexiMaps)
 
     import CompatHelperLocal as CHL
     CHL.@check()

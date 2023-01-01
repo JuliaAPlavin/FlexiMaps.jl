@@ -1,4 +1,4 @@
-module FilterMaps
+module FlexiMaps
 
 using Accessors: delete
 
