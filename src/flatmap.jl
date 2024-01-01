@@ -33,6 +33,7 @@ flatten(::Type{T}, A::MappedArray) where {T} = Base.@invoke flatten(T::Type{T}, 
 
 function flatten(::Type{T}, A::Base.AbstractVecOrTuple{<:AbstractVector}) where {T}
     if !(isconcretetype(T) || T isa Union)
+        # XXX: is this needed at all?
         return Base.@invoke flatten(T::Type{T}, A::Any)
     end
     isempty(A) && return _empty_from_type(_eltype(A), T)

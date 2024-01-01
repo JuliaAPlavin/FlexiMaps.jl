@@ -118,9 +118,6 @@ Base.searchsortedlast(A::MappedArray{<:Any, 1}, v; kwargs...) = _searchsortedlas
 _searchsortedlast(A, v, ::NoInverse; kwargs...) = Base.@invoke searchsortedlast(A::AbstractVector, v::typeof(v); kwargs...)
 _searchsortedlast(A, v, invf::Function; rev=false) = searchsortedlast(parent(A), invf(v); rev=_is_increasing(_f(A)) ? rev : !rev)
 
-# Base.findall(interval_d::Base.Fix2{typeof(in), <:Interval}, x::AbstractRange) =
-#     searchsorted_interval(x, interval_d.x; rev=step(x) < zero(step(x)))
-
 # only called for invertible functions: they are either increasing or decreasing
 _is_increasing(f) = f(2) < f(3)
 
@@ -147,10 +144,9 @@ islinear(f::Base.Fix1{<:Union{typeof.((*,))...}}) = true
 islinear(f::Base.Fix2{<:Union{typeof.((*, /))...}}) = true
 islinear(f::ComposedFunction) = islinear(f.inner) && islinear(f.outer)
 
-isaffine(f) = false
-isaffine(f::Union{typeof.((deg2rad, rad2deg, -, +))...}) = true
-isaffine(f::Base.Fix1{<:Union{typeof.((-, +, *))...}}) = true
-isaffine(f::Base.Fix2{<:Union{typeof.((-, +, *, /))...}}) = true
+isaffine(f) = islinear(f)
+isaffine(f::Base.Fix1{<:Union{typeof.((-, +))...}}) = true
+isaffine(f::Base.Fix2{<:Union{typeof.((-, +))...}}) = true
 isaffine(f::ComposedFunction) = isaffine(f.inner) && isaffine(f.outer)
 
 

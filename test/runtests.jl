@@ -371,7 +371,10 @@ end
     using Accessors
 
     let
-        @test maprange(identity, 1, 10, length=5) ≈ range(1, 10, length=5)
+        r = maprange(identity, 1, 10, length=5)
+        @test r ≈ range(1, 10, length=5)
+        @test_broken step(r) ≈ 2.25
+
         lr = @inferred maprange(log10, 0.1, 10, length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]
         @test maprange(log10, 0.1, 10, step=0.5) ≈ [0.1, √0.1, 1, √10, 10]
