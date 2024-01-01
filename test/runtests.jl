@@ -16,6 +16,7 @@ using TestItemRunner
     @test filtermap(x -> x % 3 == 0 ? Some(nothing) : nothing, X) == [nothing, nothing, nothing]
 
     @test filtermap(x -> x % 3 == 0 ? Some(x^2) : nothing, (1, 2, 3, 4, 5, 6)) === (9, 36)
+    @test filtermap(((i, x),) -> i == 2 || x == 3 ? x^2 : nothing, enumerate(X)) == [4, 9]
 
     @test_broken filtermap(x -> isodd(x) ? Some(x^2) : nothing, OffsetArray([1, 2, 3], 5))::Vector{Int} == [1, 9]
     @test filtermap(x -> isodd(x) ? Some(x^2) : nothing, KeyedArray([1, 2, 3], x=[10, 20, 30]))::KeyedArray == KeyedArray([1, 9], x=[10, 30])

@@ -8,6 +8,9 @@ Return `Some(nothing)` from `f` to keep `nothing` in the result.
 """
 function filtermap end
 
+filtermap(f::F, A) where {F} =
+    map(something, filter!(!isnothing, map(f, A)))
+
 filtermap(f::F, A::AbstractArray) where {F} =
     map(something, filter!(!isnothing, map(f, vec(A))))
 
