@@ -91,7 +91,8 @@ Base.getproperty(A::_MTT, p::Symbol) = mapview(Accessors.PropertyLens(p), A)
 Base.getproperty(A::_MTT, p) = mapview(Accessors.PropertyLens(p), A)
 
 
-function Base.:(==)(A::Union{AbstractArray, MappedAny}, B::Union{AbstractArray, MappedAny})
+Base.:(==)(A::AbstractArray, B::MappedAny) = B == A
+function Base.:(==)(A::MappedAny, B::Union{AbstractArray, MappedAny})
     if axes(A) != axes(B)
         return false
     end
