@@ -117,6 +117,9 @@ Works on arrays, dicts, and arbitrary iterables. Passes `length`, `keys` and oth
 mapview(f, X::AbstractArray{T, N}) where {T, N} = MappedArray{Core.Compiler.return_type(f, Tuple{T}), N}(f, X)
 mapview(f, X) = MappedAny(f, X)
 mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
+mapview(p::Union{Symbol,Int,String}, A::AbstractArray) = mapview(PropertyLens(p), A)
+mapview(p::Union{Symbol,Int,String}, A) = mapview(PropertyLens(p), A)
+mapview(p::Union{Symbol,Int,String}, A::_MTT) = mapview(PropertyLens(p), A)
 
 
 """

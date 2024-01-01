@@ -251,7 +251,26 @@ end
         @test collect(fma)::KeyedArray == KeyedArray([3, 4], a=[:b, :c])
     end
 
-    VERSION > v"1.9-DEV" && @testset "Dictionaries" begin
+    VERSION > v"1.9-" && @testset "StructArray" begin
+        using StructArrays
+
+        sa = StructArray(x=[1, 2, 3], y=[:a, :b, :c])
+        msa = @inferred mapview(@optic(_.x), sa)
+        @test msa === mapview(:x, sa)
+        @test msa === sa.x
+        @test mapview(@optic(_[:x]), sa) == sa.x
+        @test mapview(@optic(_[2]), sa) === sa.y
+        @test mapview(first, sa) === sa.x
+        @test mapview(last, sa) === sa.y
+        
+        msa = mapview(@optic(_[(:y, :x)]), sa)
+        @test msa == map(@optic(_[(:y, :x)]), sa)
+        @test msa.x === sa.x
+        msa[1] = (y=:d, x=10)
+        @test sa == StructArray(x=[10, 2, 3], y=[:d, :b, :c])
+    end
+
+    VERSION > v"1.9-" && @testset "Dictionaries" begin
         using Dictionaries
 
         a = dictionary([:a => 1, :b => 2, :c => 3])
