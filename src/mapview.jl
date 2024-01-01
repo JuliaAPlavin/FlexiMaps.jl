@@ -86,6 +86,12 @@ Base.keytype(A::_MTT) = keytype(parent(A))
 Base.valtype(A::_MTT) = eltype(A)
 Base.reverse(A::_MTT; kwargs...) = mapview(_f(A), reverse(parent(A); kwargs...))
 
+Base.map(f, A::_MTT) = map(f ∘ _f(A), parent(A))
+Base.collect(A::_MTT) = map(_f(A), parent(A))
+Base.filter(f, A::_MTT) = @modify(parent(A)) do P
+    filter(f ∘ _f(A), P)
+end
+
 Accessors.set(A::_MTT, ::typeof(parent), val) = constructorof(typeof(A))(_f(A), val)
 
 for type in (

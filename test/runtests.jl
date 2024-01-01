@@ -170,6 +170,7 @@ end
 
 @testitem "mapview" begin
     using FlexiMaps: MappedArray
+    using AxisKeys
     using Accessors
 
     @testset "array" begin
@@ -234,6 +235,19 @@ end
             @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
             @test searchsortedlast(reverse(ma), 20; rev=true) == 5
         end
+    end
+
+    @testset "keyedarray" begin
+        a = KeyedArray([1, 2, 3], a=[:a, :b, :c])
+        ma = @inferred mapview(x -> x + 1, a)
+        @test ma[2] == 3
+        @test_broken ma[a=2] == 3
+        @test_broken ma[a=Key(:b)] == 3
+        mma = @inferred map(x -> x + 1, ma)
+        @test mma::KeyedArray == KeyedArray([3, 4, 5], a=[:a, :b, :c])
+        fma = @inferred filter(x -> x >= 3, ma)
+        @test fma isa MappedArray
+        @test collect(fma)::KeyedArray == KeyedArray([3, 4], a=[:b, :c])
     end
 
     @testset "dict" begin
