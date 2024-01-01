@@ -319,7 +319,7 @@ end
 
 @testitem "maprange" begin
     using Unitful
-    using AccessorsExtra
+    using Accessors
 
     let
         @test maprange(identity, 1, 10, length=5) ≈ range(1, 10, length=5)
