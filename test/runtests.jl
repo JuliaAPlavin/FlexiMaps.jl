@@ -151,6 +151,14 @@ end
     @test flatten([jl([1, 2]), jl([3, 4])]) == jl([1, 2, 3, 4])
     @test flatten((jl([1, 2]), jl([3, 4]))) == jl([1, 2, 3, 4])
 
+    a = KeyedArray([1, 2], x=[10, 20])
+    b = KeyedArray([1, 2, 3], x=[10, 20, 30])
+    @test flatten([a, b])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test flatmap(x->x, (a, b))::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
+    @test a == KeyedArray([1, 2], x=10:10:20)
+    @test axiskeys(a) == (10:10:20,)
+    @test b == KeyedArray([1, 2, 3], x=10:10:30)
+
     @test flatten([KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)])::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])
     @test_throws "_out === out" flatten((x for x in [KeyedArray([1, 2], x=10:10:20), KeyedArray([1, 2, 3], x=10:10:30)]))
     @test @inferred(flatten([KeyedArray([1, 2], x=[10, 20]), KeyedArray([1, 2, 3], x=[10, 20, 30])]))::KeyedArray == KeyedArray([1, 2, 1, 2, 3], x=[10, 20, 10, 20, 30])

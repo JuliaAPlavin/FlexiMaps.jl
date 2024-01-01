@@ -143,10 +143,18 @@ end
     return out
 end
 
-_similar_with_content_concrete(A::AbstractVector, ::Type{T}) where {T} = similar(A, T, length(A)) .= A
+function _similar_with_content_concrete(A::AbstractVector, ::Type{T}) where {T}
+    res = similar(A, T)
+    res .= A
+    return res
+end
 _similar_with_content_concrete(A::AbstractArray, ::Type{T}) where {T} = _similar_with_content_concrete(vec(A), T)
 _similar_with_content_concrete(A, ::Type{T}) where {T} = append!(T[], A)
-_similar_with_content_sameeltype(A::AbstractVector) = similar(A, length(A)) .= A
+function _similar_with_content_sameeltype(A::AbstractVector)
+    res = similar(A)
+    res .= A
+    return res
+end
 _similar_with_content_sameeltype(A::AbstractArray) = _similar_with_content_sameeltype(vec(A))
 _similar_with_content_sameeltype(A) = append!(_eltype(A)[], A)
 
