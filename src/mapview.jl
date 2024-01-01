@@ -17,6 +17,21 @@ Base.@propagate_inbounds _setindex!(A::MappedArray, v, I::Tuple) = (parent(A)[I.
 Base.append!(A::MappedArray, iter) = (append!(parent(A), map(inverse(_f(A)), iter)); A)
 
 
+struct MappedRange{T, F, TX <: AbstractRange} <: AbstractRange{T}
+    f::F
+    parent::TX
+end
+MappedRange{T}(f, X) where {T} = MappedRange{T, typeof(f), typeof(X)}(f, X)
+Accessors.constructorof(::Type{<:MappedRange{T}}) where {T} = MappedRange{T}
+parent_type(::Type{<:MappedRange{<:Any, <:Any, TX}}) where {TX} = TX
+Base.step(A::MappedRange) =
+    islinear(_f(A)) ?
+        _f(A)(step(parent(A))) :  # linear
+        _f(A)(first(parent(A)) + step(parent(A))) - _f(A)(first(parent(A)))  # affine
+Base.first(A::MappedRange) = _f(A)(first(parent(A)))
+Base.last(A::MappedRange) = _f(A)(last(parent(A)))
+
+
 struct MappedAny{F, TX}
     f::F
     parent::TX
@@ -36,7 +51,7 @@ Base.eltype(A::MappedAny) = Core.Compiler.return_type(_f(A), Tuple{_eltype(paren
 end
 
 
-const _MTT = Union{MappedArray, MappedAny}
+const _MTT = Union{MappedArray, MappedRange, MappedAny}
 Base.parent(A::_MTT) = getfield(A, :parent)
 _f(A::_MTT) = getfield(A, :f)
 Base.size(A::_MTT) = size(parent(A))
@@ -115,11 +130,24 @@ Like `map(f, X)` but doesn't materialize the result and returns a view.
 Works on arrays, dicts, and arbitrary iterables. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
 """
 mapview(f, X::AbstractArray{T, N}) where {T, N} = MappedArray{Core.Compiler.return_type(f, Tuple{T}), N}(f, X)
+mapview(f, X::AbstractRange{T}) where {T} = isaffine(f) ? MappedRange{Core.Compiler.return_type(f, Tuple{T})}(f, X) : @invoke mapview(f, X::AbstractVector{T})
 mapview(f, X) = MappedAny(f, X)
 mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
 mapview(p::Union{Symbol,Int,String}, A::AbstractArray) = mapview(PropertyLens(p), A)
 mapview(p::Union{Symbol,Int,String}, A) = mapview(PropertyLens(p), A)
 mapview(p::Union{Symbol,Int,String}, A::_MTT) = mapview(PropertyLens(p), A)
+
+islinear(f) = false
+islinear(f::Union{typeof.((deg2rad, rad2deg, -, +))...}) = true
+islinear(f::Base.Fix1{<:Union{typeof.((*,))...}}) = true
+islinear(f::Base.Fix2{<:Union{typeof.((*, /))...}}) = true
+islinear(f::ComposedFunction) = islinear(f.inner) && islinear(f.outer)
+
+isaffine(f) = false
+isaffine(f::Union{typeof.((deg2rad, rad2deg, -, +))...}) = true
+isaffine(f::Base.Fix1{<:Union{typeof.((-, +, *))...}}) = true
+isaffine(f::Base.Fix2{<:Union{typeof.((-, +, *, /))...}}) = true
+isaffine(f::ComposedFunction) = isaffine(f.inner) && isaffine(f.outer)
 
 
 """
