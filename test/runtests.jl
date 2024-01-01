@@ -301,6 +301,9 @@ end
         @test lr ≈ [0.1, √0.1, 1, √10, 10]u"m"
         lr = @inferred maprange(@optic(log(ustrip(u"m", _))), 10u"cm", 10u"m", length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]u"m"
+        lr = @inferred maprange(@optic(log(_.a)), (a=0.1, b=5), (a=100., b=5), length=4)
+        @test map(r->r.a, lr) ≈ [0.1, 1, 10, 100]
+        @test map(r->r.b, lr) ≈ [5, 5, 5, 5]
 
         @testset for a in [1, 10, 100, 1000, 1e-10, 1e10], b in [1, 10, 100, 1000, 1e-10, 1e10], len in [2:10; 12345]
             rng = maprange(log, a, b, length=len)

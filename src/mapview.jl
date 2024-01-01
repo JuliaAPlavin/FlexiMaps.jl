@@ -140,10 +140,16 @@ maprange(f, start; stop, length) = maprange(f, start, stop; length)
 maprange(f; start, stop, length) = maprange(f, start, stop; length)
 maprange(f, start, stop; length) = maprange(f, promote(start, stop)...; length)
 function maprange(f, start::T, stop::T; length) where {T}
+    if inverse(f) isa NoInverse
+        @assert set(start, f, f(start)) == set(stop, f, f(start))
+        @assert set(start, f, f(stop)) == set(stop, f, f(stop))
+    end
     lo, hi = minmax(start, stop)
     rng = range(f(start), f(stop); length)
     mapview(rng) do x
-        fx = inverse(f)(x)
+        # if f is always invertible:
+        # fx = inverse(f)(x)
+        fx = set(lo, f, x)
         x === first(rng) && return oftype(fx, start)
         x === last(rng) && return oftype(fx, stop)
         clamp(fx, lo, hi)
