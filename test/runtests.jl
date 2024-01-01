@@ -198,7 +198,11 @@ end
     @test @inferred(map(x -> x * 2, ma))::Vector{Int} == [4, 6, 8]
     @test reverse(ma)::MappedArray == [4, 3, 2]
     @test view(ma, 2:3)::SubArray == [3, 4]
+
+    @test size(similar(ma, 3)::Vector{Int}) == (3,)
+    @test size(similar(mapview(float, a), 3)::Vector{Float64}) == (3,)
     @test size(similar(typeof(ma), 3)::Vector{Int}) == (3,)
+    @test size(similar(typeof(mapview(float, a)), 3)::Vector{Float64}) == (3,)
     
     # ensure we get a view
     a[2] = 20

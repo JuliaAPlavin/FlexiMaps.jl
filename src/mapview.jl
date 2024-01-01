@@ -82,7 +82,7 @@ for type in (
         :(Tuple{Integer, Vararg{Integer}}),
         :(Tuple{Union{Integer, Base.OneTo}, Vararg{Union{Integer, Base.OneTo}}}),
     )
-    @eval Base.similar(::Type{MT}, dims::$(type)) where {MT <: _MTT} = similar(parent_type(MT), dims)
+    @eval Base.similar(::Type{MT}, dims::$(type)) where {MT <: _MTT} = similar(similar(parent_type(MT), dims), eltype(MT))
     @eval Base.similar(A::_MTT, T::Type, dims::$(type)) = similar(parent(A), T, dims)
 end
 
