@@ -224,6 +224,20 @@ end
     # @test @inferred(ma[2]) == 22
     # @test @inferred(ma[CartesianIndex(2)]) == 22
 
+    ma = @inferred mapview(-, [1 2 3; 4 5 6])
+    @test ma == [-1 -2 -3; -4 -5 -6]
+    @test ma[1, 2] == -2
+    @test ma[CartesianIndex(1, 2)] == -2
+    ma_s = @inferred ma[:, 2:3]
+    @test ma_s::MappedArray == [-2 -3; -5 -6]
+    @test parent(ma_s)::Matrix == [2 3; 5 6]
+    ma_s = @inferred ma[1, :]
+    @test ma_s::MappedArray == [-1, -2, -3]
+    @test parent(ma_s)::Vector == [1, 2, 3]
+    ma_s = @inferred ma[1, 2:3]
+    @test ma_s::MappedArray == [-2, -3]
+    @test parent(ma_s)::Vector == [2, 3]
+
     ma = @inferred mapview(x -> x + 1, view([10, 20, 30], 2:3))
     @test ma == [21, 31]
     @test_broken parentindices(ma) == (2:3,)  # should it work? how to reconcile with parent()?

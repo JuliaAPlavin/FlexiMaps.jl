@@ -3,7 +3,8 @@ struct MappedArray{T, N, F, TX <: AbstractArray{<:Any, N}} <: AbstractArray{T, N
     parent::TX
 end
 MappedArray{T, N}(f, X) where {T, N} = MappedArray{T, N, typeof(f), typeof(X)}(f, X)
-Accessors.constructorof(::Type{<:MappedArray{T, N}}) where {T, N} = MappedArray{T, N}
+MappedArray{T}(f, X::AbstractArray{<:Any, N}) where {T, N} = MappedArray{T, N, typeof(f), typeof(X)}(f, X)
+Accessors.constructorof(::Type{<:MappedArray}) = mapview
 parent_type(::Type{<:MappedArray{T, N, F, TX}}) where {T, N, F, TX} = TX
 
 Base.@propagate_inbounds Base.getindex(A::MappedArray, I...) = _getindex(A, to_indices(A, I))
@@ -22,7 +23,7 @@ struct MappedRange{T, F, TX <: AbstractRange} <: AbstractRange{T}
     parent::TX
 end
 MappedRange{T}(f, X) where {T} = MappedRange{T, typeof(f), typeof(X)}(f, X)
-Accessors.constructorof(::Type{<:MappedRange{T}}) where {T} = MappedRange{T}
+Accessors.constructorof(::Type{<:MappedRange}) = mapview
 parent_type(::Type{<:MappedRange{<:Any, <:Any, TX}}) where {TX} = TX
 Base.step(A::MappedRange) =
     islinear(_f(A)) ?
