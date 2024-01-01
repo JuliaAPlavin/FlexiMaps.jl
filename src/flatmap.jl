@@ -1,5 +1,5 @@
-flatmap!(f::Function, out, A) = flatten!(out, mapview(f, A))
-flatmap!(f_out::Function, f_in::Function, out, A) = flatten!(out, mapview(a -> mapview(b -> f_in(a, b), f_out(a)), A))
+flatmap!(f::F, out, A) where {F} = flatten!(out, mapview(f, A))
+flatmap!(f_out, f_in, out, A) = flatten!(out, mapview(a -> mapview(b -> f_in(a, b), f_out(a)), A))
 
 """
     flatmap(f, X)
@@ -13,8 +13,8 @@ Apply `fₒᵤₜ` to all elements of `X`, and apply `fᵢₙ` to the results. B
 """
 function flatmap end
 
-flatmap(f::Function, A) = flatten(mapview(f, A))
-flatmap(f_out::Function, f_in::Function, A) = flatten(mapview(a -> mapview(b -> f_in(a, b), f_out(a)), A))
+flatmap(f::F, A) where {F} = flatten(mapview(f, A))
+flatmap(f_out, f_in, A) = flatten(mapview(a -> mapview(b -> f_in(a, b), f_out(a)), A))
 flatmap⁻(f_out, f_in::Function, A) = flatten(mapview(a -> mapview(b -> f_in(delete(a, f_out), b), f_out(a)), A))
 
 """    flatten(X)
@@ -106,7 +106,7 @@ julia> flatmap_parent(av -> 2 .* av, avs)
  100
 ```
 """
-function flatmap_parent(f, A)
+function flatmap_parent(f::F, A) where {F}
     Am = mapview(f, A)
     T = _eltype(_eltype(Am))
     it = iterate(A)
