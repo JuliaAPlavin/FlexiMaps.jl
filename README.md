@@ -36,11 +36,13 @@ _Analogous to `flat_map` in Rust, and `SelectMany` in C#_
 
 `flatten(X)`: flatten a collection of collections by concatenating all elements, equivalent to `flatmap(identity, X)`.
 
-## `mapview`
+## `mapview` (lazy `map`)
 
-`mapview(f, X)`: like `map(f, X)` but doesn't materialize the result and returns a view.
+`mapview(f, X)`:
+- like `map(f, X)`, but works lazily, doesn't materialize the result returning a view instead.
+- like `Iterators.map(f, X)`, but with better collection support, type stability, etc.
 
-Works on arrays, dicts, and arbitrary iterables. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
+Works on different collections and arbitrary iterables. Collection types are preserved when possible for ranges, arrays, dictionaires. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
 
 ```julia
 X = [1, 2, 3]
