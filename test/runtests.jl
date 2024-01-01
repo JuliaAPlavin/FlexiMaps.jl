@@ -142,6 +142,7 @@ end
     @test_broken @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2]), 1:1:2)))).a::Vector{Int} == [1, 2]
     @test flatten((view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2]), 1:1:2))).a::Vector{Int} == [1, 2, 1, 2]
     @test flatten(Any[StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])]).a::Vector{Int} == [1, 2, 1, 2, 3]
+    @test flatten([StructVector(a=1:2), StructVector(a=1:3)]).a::Vector{Int} == [1, 2, 1, 2, 3]
 
     @test flatten((SVector(1, 2), SVector(3, 4))) == [1, 2, 3, 4]
     @test flatten(SVector(SVector(1, 2), SVector(3, 4))) == [1, 2, 3, 4]

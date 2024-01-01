@@ -129,6 +129,8 @@ function flatmap_parent(f::F, A) where {F}
     return out
 end
 
+## functions below are internal, but be careful when removing/renaming them:
+## check for usage in other packages first!
 
 @inline function _similar_with_content(A, T)
     out = if isconcretetype(T) || T isa Union
