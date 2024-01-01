@@ -2,16 +2,19 @@ module FlexiMaps
 
 using Accessors
 using InverseFunctions
+using DataPipes
 
 export 
     filtermap,
     mapview, maprange,
     flatmap, flatmap!, flatten, flatten!,
-    flatten_parent, flatmap_parent
+    flatten_parent, flatmap_parent,
+    mapset, mapinsert, mapinsert⁻, mapsetview, mapinsertview
 
 include("filtermap.jl")
 include("mapview.jl")
 include("flatmap.jl")
+include("mapaccessors.jl")
 
 
 _eltype(::T) where {T} = _eltype(T)
