@@ -250,21 +250,21 @@ end
         @test collect(fma)::KeyedArray == KeyedArray([3, 4], a=[:b, :c])
     end
 
-    @testset "dict" begin
-        a = Dict(:a => 1, :b => 2, :c => 3)
-        ma = @inferred mapview(@optic(_ + 1), a)
-        @test ma == Dict(:a => 2, :b => 3, :c => 4)
-        @test ma isa AbstractDict{Symbol, Int}
-        @test @inferred(ma[:c]) == 4
-        # ensure we get a view
-        a[:b] = 20
-        @test ma == Dict(:a => 2, :b => 21, :c => 4)
+    # @testset "dict" begin
+    #     a = Dict(:a => 1, :b => 2, :c => 3)
+    #     ma = @inferred mapview(@optic(_ + 1), a)
+    #     @test ma == Dict(:a => 2, :b => 3, :c => 4)
+    #     @test ma isa AbstractDict{Symbol, Int}
+    #     @test @inferred(ma[:c]) == 4
+    #     # ensure we get a view
+    #     a[:b] = 20
+    #     @test ma == Dict(:a => 2, :b => 21, :c => 4)
 
-        ma[:c] = 11
-        ma[:d] = 31
-        @test a == Dict(:a => 1, :b => 20, :c => 10, :d => 30)
-        @test ma == Dict(:a => 2, :b => 21, :c => 11, :d => 31)
-    end
+    #     ma[:c] = 11
+    #     ma[:d] = 31
+    #     @test a == Dict(:a => 1, :b => 20, :c => 10, :d => 30)
+    #     @test ma == Dict(:a => 2, :b => 21, :c => 11, :d => 31)
+    # end
 
     @testset "iterator" begin
         a = [1, 2, 3]

@@ -17,41 +17,6 @@ Base.@propagate_inbounds _setindex!(A::MappedArray, v, I::Tuple) = (parent(A)[I.
 Base.append!(A::MappedArray, iter) = (append!(parent(A), map(inverse(_f(A)), iter)); A)
 
 
-struct MappedDict{K, V, F, TX <: AbstractDict{K}} <: AbstractDict{K, V}
-    f::F
-    parent::TX
-end
-MappedDict{K, V}(f, X) where {K, V} = MappedDict{K, V, typeof(f), typeof(X)}(f, X)
-Accessors.constructorof(::Type{<:MappedDict{K, V}}) where {K, V} = MappedDict{K, V}
-parent_type(::Type{<:MappedDict{K, V, F, TX}}) where {K, V, F, TX} = TX
-
-Base.@propagate_inbounds Base.getindex(A::MappedDict, I...) = _f(A)(parent(A)[I...])
-Base.@propagate_inbounds function Base.setindex!(A::MappedDict, v, k)
-    oldv = get(parent(A), k, Base.secret_table_token)
-    newv = oldv === Base.secret_table_token ?
-        inverse(_f(A))(v) :
-        set(oldv, _f(A), v)
-    parent(A)[k] = newv
-    A
-end
-
-Base.get(A::MappedDict, k, default) = get(Returns(default), A, k)
-function Base.get(default::Function, A::MappedDict, k)
-    v = get(parent(A), k, Base.secret_table_token)
-    v === Base.secret_table_token && return default()
-    return _f(A)(v)
-end
-
-
-
-@inline function Base.iterate(A::MappedDict, state...)
-	it = iterate(parent(A), state...)
-	isnothing(it) ?
-        nothing :
-        (first(it).first => _f(A)(first(it).second), last(it))
-end
-
-
 struct MappedAny{F, TX}
     f::F
     parent::TX
@@ -71,7 +36,7 @@ Base.eltype(A::MappedAny) = Core.Compiler.return_type(_f(A), Tuple{_eltype(paren
 end
 
 
-const _MTT = Union{MappedArray, MappedDict, MappedAny}
+const _MTT = Union{MappedArray, MappedAny}
 Base.parent(A::_MTT) = getfield(A, :parent)
 _f(A::_MTT) = getfield(A, :f)
 Base.size(A::_MTT) = size(parent(A))
@@ -150,7 +115,6 @@ Like `map(f, X)` but doesn't materialize the result and returns a view.
 Works on arrays, dicts, and arbitrary iterables. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
 """
 mapview(f, X::AbstractArray{T, N}) where {T, N} = MappedArray{Core.Compiler.return_type(f, Tuple{T}), N}(f, X)
-mapview(f, X::Dict{K, V}) where {K, V} = MappedDict{K, Core.Compiler.return_type(f, Tuple{V})}(f, X)
 mapview(f, X) = MappedAny(f, X)
 mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
 
