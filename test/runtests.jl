@@ -267,7 +267,7 @@ end
         @test collect(fma)::KeyedArray == KeyedArray([3, 4], a=[:b, :c])
     end
 
-    VERSION > v"1.9-" && @testset "StructArray" begin
+    @testset "StructArray" begin
         using StructArrays
 
         sa = StructArray(x=[1, 2, 3], y=[:a, :b, :c])
@@ -286,7 +286,7 @@ end
         @test sa == StructArray(x=[10, 2, 3], y=[:d, :b, :c])
     end
 
-    VERSION > v"1.9-" && @testset "Dictionaries" begin
+    @testset "Dictionaries" begin
         using Dictionaries
 
         a = dictionary([:a => 1, :b => 2, :c => 3])
