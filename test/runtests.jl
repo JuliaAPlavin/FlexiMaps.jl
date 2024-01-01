@@ -184,137 +184,138 @@ end
     end
 end
 
-@testitem "mapview" begin
+@testitem "mapview - arrays" begin
     using FlexiMaps: MappedArray
     using Accessors
 
-    @testset "array" begin
-        a = [1, 2, 3]
-        ma = @inferred mapview(@optic(_ + 1), a)
-        @test ma == [2, 3, 4]
-        @test ma isa AbstractVector{Int}
-        @test @inferred(ma[3]) == 4
-        @test @inferred(ma[CartesianIndex(3)]) == 4
-        @test @inferred(ma[2:3])::MappedArray == [3, 4]
-        @test @inferred(map(x -> x * 2, ma))::Vector{Int} == [4, 6, 8]
-        @test reverse(ma)::MappedArray == [4, 3, 2]
-        @test view(ma, 2:3)::SubArray == [3, 4]
-        @test size(similar(typeof(ma), 3)::Vector{Int}) == (3,)
-        
-        # ensure we get a view
-        a[2] = 20
-        @test ma == [2, 21, 4]
+    a = [1, 2, 3]
+    ma = @inferred mapview(@optic(_ + 1), a)
+    @test ma == [2, 3, 4]
+    @test ma isa AbstractVector{Int}
+    @test @inferred(ma[3]) == 4
+    @test @inferred(ma[CartesianIndex(3)]) == 4
+    @test @inferred(ma[2:3])::MappedArray == [3, 4]
+    @test @inferred(map(x -> x * 2, ma))::Vector{Int} == [4, 6, 8]
+    @test reverse(ma)::MappedArray == [4, 3, 2]
+    @test view(ma, 2:3)::SubArray == [3, 4]
+    @test size(similar(typeof(ma), 3)::Vector{Int}) == (3,)
+    
+    # ensure we get a view
+    a[2] = 20
+    @test ma == [2, 21, 4]
 
-        ma[3] = 11
-        ma[1:2] = [21, 31]
-        push!(ma, 101)
-        @test a == [20, 30, 10, 100]
-        @test ma == [21, 31, 11, 101]
+    ma[3] = 11
+    ma[1:2] = [21, 31]
+    push!(ma, 101)
+    @test a == [20, 30, 10, 100]
+    @test ma == [21, 31, 11, 101]
 
-        ma = @inferred mapview(x -> (; x=x + 1), a)
-        @test ma.x::MappedArray{Int} == [21, 31, 11, 101]
-        @test parent(ma.x) === parent(ma) === a
+    ma = @inferred mapview(x -> (; x=x + 1), a)
+    @test ma.x::MappedArray{Int} == [21, 31, 11, 101]
+    @test parent(ma.x) === parent(ma) === a
 
-        # multiple arrays - not implemented
-        # ma = @inferred mapview((x, y) -> x + y, 1:3, [10, 20, 30])
-        # @test ma == [11, 22, 33]
-        # @test @inferred(ma[2]) == 22
-        # @test @inferred(ma[CartesianIndex(2)]) == 22
+    # multiple arrays - not implemented
+    # ma = @inferred mapview((x, y) -> x + y, 1:3, [10, 20, 30])
+    # @test ma == [11, 22, 33]
+    # @test @inferred(ma[2]) == 22
+    # @test @inferred(ma[CartesianIndex(2)]) == 22
 
-        ma = @inferred mapview(x -> x + 1, view([10, 20, 30], 2:3))
-        @test ma == [21, 31]
-        @test_broken parentindices(ma) == (2:3,)  # should it work? how to reconcile with parent()?
+    ma = @inferred mapview(x -> x + 1, view([10, 20, 30], 2:3))
+    @test ma == [21, 31]
+    @test_broken parentindices(ma) == (2:3,)  # should it work? how to reconcile with parent()?
 
-        @testset "find" begin
-            ma = mapview(@optic(_ * 10), [1, 2, 2, 2, 3, 4])
-            @test findfirst(==(30), ma) == 5
-            @test findfirst(==(35), ma) |> isnothing
-            @test searchsortedfirst(ma, 20) == 2
-            @test searchsortedlast(ma, 20) == 4
-            @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
-            @test searchsortedlast(reverse(ma), 20; rev=true) == 5
+    @testset "find" begin
+        ma = mapview(@optic(_ * 10), [1, 2, 2, 2, 3, 4])
+        @test findfirst(==(30), ma) == 5
+        @test findfirst(==(35), ma) |> isnothing
+        @test searchsortedfirst(ma, 20) == 2
+        @test searchsortedlast(ma, 20) == 4
+        @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
+        @test searchsortedlast(reverse(ma), 20; rev=true) == 5
 
-            ma = mapview(x -> x * 10, [1, 2, 2, 2, 3, 4])
-            @test findfirst(==(30), ma) == 5
-            @test findfirst(==(35), ma) |> isnothing
-            @test searchsortedfirst(ma, 20) == 2
-            @test searchsortedlast(ma, 20) == 4
-            @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
-            @test searchsortedlast(reverse(ma), 20; rev=true) == 5
+        ma = mapview(x -> x * 10, [1, 2, 2, 2, 3, 4])
+        @test findfirst(==(30), ma) == 5
+        @test findfirst(==(35), ma) |> isnothing
+        @test searchsortedfirst(ma, 20) == 2
+        @test searchsortedlast(ma, 20) == 4
+        @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
+        @test searchsortedlast(reverse(ma), 20; rev=true) == 5
 
-            ma = mapview(@optic(_ * -10), .- [1, 2, 2, 2, 3, 4])
-            @test findfirst(==(30), ma) == 5
-            @test findfirst(==(35), ma) |> isnothing
-            @test searchsortedfirst(ma, 20) == 2
-            @test searchsortedlast(ma, 20) == 4
-            @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
-            @test searchsortedlast(reverse(ma), 20; rev=true) == 5
-        end
+        ma = mapview(@optic(_ * -10), .- [1, 2, 2, 2, 3, 4])
+        @test findfirst(==(30), ma) == 5
+        @test findfirst(==(35), ma) |> isnothing
+        @test searchsortedfirst(ma, 20) == 2
+        @test searchsortedlast(ma, 20) == 4
+        @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
+        @test searchsortedlast(reverse(ma), 20; rev=true) == 5
     end
+end
 
-    @testset "KeyedArray" begin
-        using AxisKeys
+@testitem "mapview - KeyedArray" begin
+    using FlexiMaps: MappedArray
+    using AxisKeys
 
-        a = KeyedArray([1, 2, 3], a=[:a, :b, :c])
-        ma = @inferred mapview(x -> x + 1, a)
-        @test ma[2] == 3
-        @test_broken ma[a=2] == 3
-        @test_broken ma[a=Key(:b)] == 3
-        mma = @inferred map(x -> x + 1, ma)
-        @test mma::KeyedArray == KeyedArray([3, 4, 5], a=[:a, :b, :c])
-        fma = @inferred filter(x -> x >= 3, ma)
-        @test fma isa MappedArray
-        @test collect(fma)::KeyedArray == KeyedArray([3, 4], a=[:b, :c])
-    end
+    a = KeyedArray([1, 2, 3], a=[:a, :b, :c])
+    ma = @inferred mapview(x -> x + 1, a)
+    @test ma[2] == 3
+    @test_broken ma[a=2] == 3
+    @test_broken ma[a=Key(:b)] == 3
+    mma = @inferred map(x -> x + 1, ma)
+    @test mma::KeyedArray == KeyedArray([3, 4, 5], a=[:a, :b, :c])
+    fma = @inferred filter(x -> x >= 3, ma)
+    @test fma isa MappedArray
+    @test collect(fma)::KeyedArray == KeyedArray([3, 4], a=[:b, :c])
+end
 
-    @testset "StructArray" begin
-        using StructArrays
+@testitem "mapview - StructArrays" begin
+    using Accessors
+    using StructArrays
 
-        sa = StructArray(x=[1, 2, 3], y=[:a, :b, :c])
-        msa = @inferred mapview(@optic(_.x), sa)
-        @test msa === mapview(:x, sa)
-        @test msa === sa.x
-        @test mapview(@optic(_[:x]), sa) == sa.x
-        @test mapview(@optic(_[2]), sa) === sa.y
-        @test mapview(first, sa) === sa.x
-        @test mapview(last, sa) === sa.y
-        
-        msa = mapview(@optic(_[(:y, :x)]), sa)
-        @test msa == map(@optic(_[(:y, :x)]), sa)
-        @test msa.x === sa.x
-        msa[1] = (y=:d, x=10)
-        @test sa == StructArray(x=[10, 2, 3], y=[:d, :b, :c])
-    end
+    sa = StructArray(x=[1, 2, 3], y=[:a, :b, :c])
+    msa = @inferred mapview(@optic(_.x), sa)
+    @test msa === mapview(:x, sa)
+    @test msa === sa.x
+    @test mapview(@optic(_[:x]), sa) == sa.x
+    @test mapview(@optic(_[2]), sa) === sa.y
+    @test mapview(first, sa) === sa.x
+    @test mapview(last, sa) === sa.y
+    
+    msa = mapview(@optic(_[(:y, :x)]), sa)
+    @test msa == map(@optic(_[(:y, :x)]), sa)
+    @test msa.x === sa.x
+    msa[1] = (y=:d, x=10)
+    @test sa == StructArray(x=[10, 2, 3], y=[:d, :b, :c])
+end
 
-    @testset "Dictionaries" begin
-        using Dictionaries
+@testitem "mapview - Dictionaries" begin
+    using Accessors
+    using Dictionaries
 
-        a = dictionary([:a => 1, :b => 2, :c => 3])
-        ma = @inferred mapview(@optic(_ + 1), a)
-        @test ma == dictionary([:a => 2, :b => 3, :c => 4])
-        @test ma isa AbstractDictionary{Symbol, Int}
-        @test @inferred(ma[:c]) == 4
-        # ensure we get a view
-        a[:b] = 20
-        @test ma == dictionary([:a => 2, :b => 21, :c => 4])
+    a = dictionary([:a => 1, :b => 2, :c => 3])
+    ma = @inferred mapview(@optic(_ + 1), a)
+    @test ma == dictionary([:a => 2, :b => 3, :c => 4])
+    @test ma isa AbstractDictionary{Symbol, Int}
+    @test @inferred(ma[:c]) == 4
+    # ensure we get a view
+    a[:b] = 20
+    @test ma == dictionary([:a => 2, :b => 21, :c => 4])
 
-        ma[:c] = 11
-        @test a == dictionary([:a => 1, :b => 20, :c => 10])
-        @test ma == dictionary([:a => 2, :b => 21, :c => 11])
-    end
+    ma[:c] = 11
+    @test a == dictionary([:a => 1, :b => 20, :c => 10])
+    @test ma == dictionary([:a => 2, :b => 21, :c => 11])
+end
 
-    @testset "iterator" begin
-        a = [1, 2, 3]
-        ma = @inferred mapview(x -> x + 1, (x for x in a))
-        @test ma == [2, 3, 4]
-        @test @inferred(eltype(ma)) == Int
-        @test @inferred(first(ma)) == 2
-        @test @inferred(collect(ma)) == [2, 3, 4]
-        @test @inferred(findmax(ma)) == (4, 3)
-        # ensure we get a view
-        a[2] = 20
-        @test ma == [2, 21, 4]
-    end
+@testitem "mapview - iterators" begin
+    a = [1, 2, 3]
+    ma = @inferred mapview(x -> x + 1, (x for x in a))
+    @test ma == [2, 3, 4]
+    @test @inferred(eltype(ma)) == Int
+    @test @inferred(first(ma)) == 2
+    @test @inferred(collect(ma)) == [2, 3, 4]
+    @test @inferred(findmax(ma)) == (4, 3)
+    # ensure we get a view
+    a[2] = 20
+    @test ma == [2, 21, 4]
 end
 
 @testitem "maprange" begin
