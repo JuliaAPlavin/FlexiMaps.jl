@@ -133,8 +133,11 @@ mapview(f, X::AbstractArray{T, N}) where {T, N} = MappedArray{Core.Compiler.retu
 mapview(f, X::AbstractRange{T}) where {T} = isaffine(f) ? MappedRange{Core.Compiler.return_type(f, Tuple{T})}(f, X) : @invoke mapview(f, X::AbstractVector{T})
 mapview(f, X) = MappedAny(f, X)
 mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
-mapview(p::Union{Symbol,Int,String}, A::AbstractArray) = mapview(PropertyLens(p), A)
+
 mapview(p::Union{Symbol,Int,String}, A) = mapview(PropertyLens(p), A)
+# disambiguate:
+mapview(p::Union{Symbol,Int,String}, A::AbstractArray) = mapview(PropertyLens(p), A)
+mapview(p::Union{Symbol,Int,String}, A::AbstractRange) = mapview(PropertyLens(p), A)
 mapview(p::Union{Symbol,Int,String}, A::_MTT) = mapview(PropertyLens(p), A)
 
 islinear(f) = false
