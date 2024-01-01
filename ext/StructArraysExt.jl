@@ -3,14 +3,17 @@ using StructArrays
 import FlexiMaps: mapview, _mapmerge, _merge_insert, mapinsert⁻
 using FlexiMaps.Accessors, FlexiMaps.DataPipes
 
+const _FUNCS = Union{
+    PropertyLens,
+    IndexLens{<:Tuple{Integer}},
+    typeof(first),typeof(last)
+}
 mapview(
-    o::Union{
-        PropertyLens,
-        IndexLens{<:Tuple{Integer}},
-        typeof(first),typeof(last)
-    },
+    o::_FUNCS,
     A::StructArray
 ) = o(StructArrays.components(A))
+
+mapview(f::ComposedFunction{<:Any, <:_FUNCS}, x::StructArray) = mapview(f.outer, mapview(f.inner, x))
 
 mapview(
     o::IndexLens{<:Tuple{Tuple{Vararg{Union{Integer,Symbol}}}}},
