@@ -128,8 +128,8 @@ Like `map(f, X)` but doesn't materialize the result and returns a view.
 
 Works on arrays, dicts, and arbitrary iterables. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
 """
-mapview(f, X::AbstractArray{T, N}) where {T, N} = MappedArray{Core.Compiler.return_type(f, Tuple{T}), N}(f, X)
-mapview(f, X::AbstractRange{T}) where {T} = isaffine(f) ? MappedRange{Core.Compiler.return_type(f, Tuple{T})}(f, X) : @invoke mapview(f, X::AbstractVector{T})
+mapview(f::F, X::AbstractArray{T, N}) where {F, T, N} = MappedArray{Core.Compiler.return_type(f, Tuple{T}), N}(f, X)
+mapview(f::F, X::AbstractRange{T}) where {F, T} = isaffine(f) ? MappedRange{Core.Compiler.return_type(f, Tuple{T})}(f, X) : @invoke mapview(f, X::AbstractVector{T})
 mapview(f, X) = MappedAny(f, X)
 mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
 
