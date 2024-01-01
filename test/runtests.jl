@@ -353,6 +353,8 @@ end
         @test maprange(identity, 1, 10, length=5) ≈ range(1, 10, length=5)
         lr = @inferred maprange(log10, 0.1, 10, length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]
+        @test maprange(log10, 0.1, 10, step=0.5) ≈ [0.1, √0.1, 1, √10, 10]
+
         for f in [log, log2, log10, @optic(log(0.1, _))]
             lr = @inferred maprange(f, 0.1, 10, length=5)
             @test lr ≈ [0.1, √0.1, 1, √10, 10]
@@ -368,6 +370,7 @@ end
         @test map(r->r.a, lr) ≈ [0.1, 1, 10, 100]
         @test map(r->r.b, lr) ≈ [5, 5, 5, 5]
 
+        # @testset for a in [10], b in [100], len in [2:10; 12345]
         @testset for a in [1, 10, 100, 1000, 1e-10, 1e10], b in [1, 10, 100, 1000, 1e-10, 1e10], len in [2:10; 12345]
             rng = maprange(log, a, b, length=len)
             @test length(rng) == len
@@ -375,6 +378,12 @@ end
             @test issorted(rng, rev=a > b)
             @test minimum(rng) == min(a, b)
             @test maximum(rng) == max(a, b)
+            @test map(log, rng) ≈ range(log(a), log(b), length=len)
+
+            rng = maprange(log, a, b, step=0.5)
+            a != b && @test allunique(rng)
+            @test issorted(rng, rev=a > b)
+            @test map(log, rng) ≈ range(log(a), log(b), step=0.5)
         end
     end
 end
