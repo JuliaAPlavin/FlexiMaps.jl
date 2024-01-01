@@ -22,6 +22,8 @@ using TestItemRunner
     @test filtermap(x -> isodd(x) ? Some(x^2) : nothing, KeyedArray([1, 2, 3], x=[10, 20, 30]))::KeyedArray == KeyedArray([1, 9], x=[10, 30])
 
     @test filtermap(x -> x % 3 == 0 ? Some(x^2) : nothing, [1 2 3; 4 5 6]) == [9, 36]
+
+    @test filtermap(x -> x[1] == x[2] ? x[1] : nothing, Iterators.product(1:3, 1.:3.)) == [1, 2, 3]
 end
 
 @testitem "flatmap only outer func" begin
