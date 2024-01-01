@@ -150,4 +150,4 @@ _similar_with_content_sameeltype(A) = append!(_eltype(A)[], A)
 _empty_from_type(::Type, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{Union{}}, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{<:AbstractRange}, ::Type{T}) where {T} = T[]
-_empty_from_type(::Type{AT}, ::Type{T}) where {AT <: AbstractArray, T} = similar(similar(AT, 0), T)
+_empty_from_type(::Type{AT}, ::Type{T}) where {AT <: AbstractArray, T} = isconcretetype(AT) ? similar(similar(AT, 0), T) : T[]

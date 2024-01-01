@@ -52,6 +52,19 @@ end
     X = [(a=[1, 2],), (a=[3, 4],)]
     out = Int[]
     @test flatmap!(x -> x.a, out, X) === out == [1, 2, 3, 4]
+
+    en = enumerate([3, 4, 5])
+    @test flatmap(((i, x),) -> 1:x, en) == [1,2,3, 1,2,3,4, 1,2,3,4,5]
+    @test flatmap(((i, x),) -> i < 2 ? Vector{Int}(1:x) : Vector{Any}(1:x), en) == [1,2,3, 1,2,3,4, 1,2,3,4,5]
+    en = enumerate(Any[3, 4, 5])
+    @test flatmap(((i, x),) -> 1:x, en) == [1,2,3, 1,2,3,4, 1,2,3,4,5]
+    @test flatmap(((i, x),) -> i < 2 ? Vector{Int}(1:x) : Vector{Any}(1:x), en) == [1,2,3, 1,2,3,4, 1,2,3,4,5]
+    en = enumerate(Int[])
+    @test flatmap(((i, x),) -> 1:x, en) == []
+    @test flatmap(((i, x),) -> i < 2 ? Vector{Int}(1:x) : Vector{Any}(1:x), en) == []
+    en = enumerate([])
+    @test flatmap(((i, x),) -> 1:x, en) == []
+    @test flatmap(((i, x),) -> i < 2 ? Vector{Int}(1:x) : Vector{Any}(1:x), en) == []
 end
 
 @testitem "flatmap outer & inner func" begin
@@ -116,7 +129,7 @@ end
     @test @inferred(flatten(([1], 2)))::Vector{Int} == [1, 2]
 
     # should the eltype be promoted at all?
-    @test @inferred(Vector{Int}, flatten(Union{Vector{Int}, Vector{Float64}}[[1], [2.0]]))::Vector{Float64} == [1, 2]
+    @test flatten(Union{Vector{Int}, Vector{Float64}}[[1], [2.0]])::Vector{Float64} == [1, 2]
     @test flatten([[1], ["2"]])::Vector == [1, "2"]
     @test @inferred(flatten([Union{Int, Float64}[1], Union{Int, Float64}[2.0]]))::Vector{Union{Int, Float64}} == [1, 2]
     @test @inferred(flatten([Union{Int, Float64}[1, 2.0], Union{Int, Float64}[2.0]]))::Vector{Union{Int, Float64}} == [1, 2, 2]
