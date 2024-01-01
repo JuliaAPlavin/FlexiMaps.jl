@@ -170,7 +170,6 @@ end
 
 @testitem "mapview" begin
     using FlexiMaps: MappedArray
-    using AxisKeys
     using Accessors
 
     @testset "array" begin
@@ -237,7 +236,9 @@ end
         end
     end
 
-    @testset "keyedarray" begin
+    @testset "KeyedArray" begin
+        using AxisKeys
+
         a = KeyedArray([1, 2, 3], a=[:a, :b, :c])
         ma = @inferred mapview(x -> x + 1, a)
         @test ma[2] == 3
@@ -250,21 +251,22 @@ end
         @test collect(fma)::KeyedArray == KeyedArray([3, 4], a=[:b, :c])
     end
 
-    # @testset "dict" begin
-    #     a = Dict(:a => 1, :b => 2, :c => 3)
-    #     ma = @inferred mapview(@optic(_ + 1), a)
-    #     @test ma == Dict(:a => 2, :b => 3, :c => 4)
-    #     @test ma isa AbstractDict{Symbol, Int}
-    #     @test @inferred(ma[:c]) == 4
-    #     # ensure we get a view
-    #     a[:b] = 20
-    #     @test ma == Dict(:a => 2, :b => 21, :c => 4)
+    VERSION > v"1.9-DEV" && @testset "Dictionaries" begin
+        using Dictionaries
 
-    #     ma[:c] = 11
-    #     ma[:d] = 31
-    #     @test a == Dict(:a => 1, :b => 20, :c => 10, :d => 30)
-    #     @test ma == Dict(:a => 2, :b => 21, :c => 11, :d => 31)
-    # end
+        a = dictionary([:a => 1, :b => 2, :c => 3])
+        ma = @inferred mapview(@optic(_ + 1), a)
+        @test ma == dictionary([:a => 2, :b => 3, :c => 4])
+        @test ma isa AbstractDictionary{Symbol, Int}
+        @test @inferred(ma[:c]) == 4
+        # ensure we get a view
+        a[:b] = 20
+        @test ma == dictionary([:a => 2, :b => 21, :c => 4])
+
+        ma[:c] = 11
+        @test a == dictionary([:a => 1, :b => 20, :c => 10])
+        @test ma == dictionary([:a => 2, :b => 21, :c => 11])
+    end
 
     @testset "iterator" begin
         a = [1, 2, 3]
@@ -375,7 +377,7 @@ end
 
 @testitem "_" begin
     import Aqua
-    Aqua.test_all(FlexiMaps; ambiguities=false)
+    Aqua.test_all(FlexiMaps; ambiguities=false, project_toml_formatting=false)
     Aqua.test_ambiguities(FlexiMaps)
 
     import CompatHelperLocal as CHL
