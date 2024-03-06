@@ -15,7 +15,7 @@ Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [compat]
 Accessors = "0.1.20"
-Aqua = "0.7"
+Aqua = "0.8"
 AxisKeys = "0.2.9"
 CompatHelperLocal = "0.1.24"
 Dictionaries = "0.3.25"

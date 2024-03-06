@@ -514,7 +514,7 @@ end
 
 @testitem "_" begin
     import Aqua
-    Aqua.test_all(FlexiMaps; ambiguities=false, project_toml_formatting=false)
+    Aqua.test_all(FlexiMaps; ambiguities=false)
     Aqua.test_ambiguities(FlexiMaps)
 
     import CompatHelperLocal as CHL
