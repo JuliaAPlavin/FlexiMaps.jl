@@ -292,8 +292,17 @@ end
     a = KeyedArray([1, 2, 3], a=[:a, :b, :c])
     ma = @inferred mapview(x -> x + 1, a)
     @test ma[2] == 3
-    @test_broken ma[a=2] == 3
-    @test_broken ma[a=Key(:b)] == 3
+    @test ma[a=2] == 3
+    @test ma[a=Key([:b,:c])] == [3, 4]
+    @test (@view ma[a=2:3]) == [3, 4]
+    @test ma(:a) == 2
+    @test ma(a=[:a, :c]) == [2, 4]
+    
+    @test axiskeys(ma) === axiskeys(a)
+    @test axiskeys(ma, 1) === axiskeys(a, 1)
+    @test dimnames(ma) === dimnames(a)
+    @test dimnames(ma, 1) === dimnames(a, 1)
+
     mma = @inferred map(x -> x + 1, ma)
     @test mma::KeyedArray == KeyedArray([3, 4, 5], a=[:a, :b, :c])
     fma = @inferred filter(x -> x >= 3, ma)
