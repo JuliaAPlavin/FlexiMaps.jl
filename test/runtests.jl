@@ -378,6 +378,7 @@ end
 @testitem "maprange" begin
     using Unitful
     using Accessors
+    using IntervalSets
 
     Accessors.set(obj, ::typeof(ustrip), val) = val * unit(obj)
 
@@ -385,6 +386,8 @@ end
         r = maprange(identity, 1, 10, length=5)
         @test r ≈ range(1, 10, length=5)
         @test_broken step(r) ≈ 2.25
+
+        @test maprange(log10, 1, 10, length=5) === maprange(log10, 1..10; length=5)
 
         lr = @inferred maprange(log10, 0.1, 10, length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]
