@@ -21,7 +21,7 @@ StructArraysExt = "StructArrays"
 [compat]
 Accessors = "0.1.20"
 DataPipes = "0.3.8"
-Dictionaries = "0.3"
+Dictionaries = "0.3, 0.4"
 IntervalSets = "0.7"
 InverseFunctions = "0.1.7"
 StructArrays = "0.6.12"
