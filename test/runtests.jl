@@ -378,6 +378,8 @@ end
     using Unitful
     using Accessors
 
+    Accessors.set(obj, ::typeof(ustrip), val) = val * unit(obj)
+
     let
         r = maprange(identity, 1, 10, length=5)
         @test r ≈ range(1, 10, length=5)
@@ -386,6 +388,9 @@ end
         lr = @inferred maprange(log10, 0.1, 10, length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]
         @test maprange(log10, 0.1, 10, step=0.5) ≈ [0.1, √0.1, 1, √10, 10]
+
+        @test maprange(log, 1, 1im, length=3) ≈ [1, √(0.5) + √(0.5)im, 1im]
+        @test maprange(log, √0.5 * (-1-1im), √0.5 * (-1+1im), length=3) ≈ [√0.5 * (-1-1im), 1, √0.5 * (-1+1im)]
 
         for f in [log, log2, log10, @optic(log(0.1, _))]
             lr = @inferred maprange(f, 0.1, 10, length=5)
@@ -397,6 +402,8 @@ end
         lr = @inferred maprange(@optic(log(ustrip(u"m", _))), 0.1u"m", 10u"m", length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]u"m"
         lr = @inferred maprange(@optic(log(ustrip(u"m", _))), 10u"cm", 10u"m", length=5)
+        @test lr ≈ [0.1, √0.1, 1, √10, 10]u"m"
+        lr = @inferred maprange(log ∘ ustrip, 10u"cm", 10u"m", length=5)
         @test lr ≈ [0.1, √0.1, 1, √10, 10]u"m"
         lr = @inferred maprange(@optic(log(_.a)), (a=0.1, b=5), (a=100., b=5), length=4)
         @test map(r->r.a, lr) ≈ [0.1, 1, 10, 100]

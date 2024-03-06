@@ -168,23 +168,33 @@ Other transformations can also be useful:
 """
 function maprange end
 
-maprange(f, start; stop, length=nothing, step=nothing) = maprange(f, start, stop; length, step)
-maprange(f; start, stop, length=nothing, step=nothing) = maprange(f, start, stop; length, step)
-maprange(f, start, stop; length=nothing, step=nothing) = maprange(f, promote(start, stop)...; length, step)
-function maprange(f, start::T, stop::T; length=nothing, step=nothing) where {T}
+maprange(f; start, stop, length=nothing, step=nothing) = maprange(f, start, stop, length; step)
+maprange(f, start; stop, length=nothing, step=nothing) = maprange(f, start, stop, length; step)
+maprange(f, start, stop; length=nothing, step=nothing) = maprange(f, start, stop, length; step)
+maprange(f, start, stop, length; step=nothing) = maprange(f, promote(start, stop)..., length; step)
+function maprange(f, start::T, stop::T, length; step=nothing) where {T}
     isnothing(length) == isnothing(step) && throw(ArgumentError("Exactly one, length or step, should be specified"))
     if inverse(f) isa NoInverse
         @assert set(start, f, f(start)) == set(stop, f, f(start))
         @assert set(start, f, f(stop)) == set(stop, f, f(stop))
     end
-    lo, hi = minmax(start, stop)
     rng = range(f(start), f(stop); length, step)
-    mapview(rng) do x
-        # if f is always invertible:
-        # fx = inverse(f)(x)
-        fx = set(lo, f, x)
-        x === first(rng) && return oftype(fx, start)
-        !isnothing(length) && x === last(rng) && return oftype(fx, stop)
-        clamp(fx, lo, hi)
+    if applicable(isless, start, stop)
+        lo, hi = minmax(start, stop)
+        mapview(rng) do x
+            # if f is always invertible:
+            # fx = inverse(f)(x)
+            fx = set(lo, f, x)
+            x === first(rng) && return oftype(fx, start)
+            !isnothing(length) && x === last(rng) && return oftype(fx, stop)
+            clamp(fx, lo, hi)
+        end
+    else
+        mapview(rng) do x
+            fx = set(start, f, x)
+            x === first(rng) && return oftype(fx, start)
+            !isnothing(length) && x === last(rng) && return oftype(fx, stop)
+            fx
+        end
     end
 end
