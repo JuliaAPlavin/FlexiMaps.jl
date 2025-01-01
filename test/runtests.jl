@@ -364,6 +364,7 @@ end
 @testitem "mapview - ranges" begin
     using FlexiMaps: MappedArray
     using Accessors
+    using Unitful
 
     rng = mapview(deg2rad, 0:90:360)::AbstractRange
     @test rng ≈ [0, π/2, π, 3π/2, 2π]
@@ -380,6 +381,18 @@ end
     rng = mapview(@optic((_ + 1) / 2), 0:10)::AbstractRange
     @test rng == 0.5:0.5:5.5
     @test step(rng) == 0.5
+
+    rng = mapview(@optic(_ * u"m"), 0:10)::AbstractRange
+    @test rng == (0:1:10)u"m"
+    @test step(rng) === 1u"m"
+
+    rng = mapview(ustrip, (0:10)u"m")::AbstractRange
+    @test rng == 0:10
+    @test step(rng) === 1
+
+    rng = mapview((@o ustrip(u"cm", _)), (0:10)u"m")::AbstractRange
+    @test rng == 0:100:1000
+    @test step(rng) === 100
 
     rng = mapview(x -> x + 1, 0:10)::MappedArray
     @test rng == map(x->x+1, 0:10)
