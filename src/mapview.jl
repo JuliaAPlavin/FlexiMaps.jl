@@ -15,6 +15,7 @@ Base.@propagate_inbounds Base.setindex!(A::MappedArray, v, I...) = _setindex!(A,
 Base.@propagate_inbounds _setindex!(A::MappedArray, v, I::Tuple{Vararg{Integer}}) = (parent(A)[I...] = set(parent(A)[I...], _f(A), v); A)
 Base.@propagate_inbounds _setindex!(A::MappedArray, v, I::Tuple) = (parent(A)[I...] = set.(parent(A)[I...], Ref(_f(A)), v); A)
 
+Base.push!(A::MappedArray, v) = (push!(parent(A), inverse(_f(A))(v)); A)
 Base.append!(A::MappedArray, iter) = (append!(parent(A), map(inverse(_f(A)), iter)); A)
 
 
