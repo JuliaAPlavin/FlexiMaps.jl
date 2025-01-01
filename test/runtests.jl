@@ -200,6 +200,7 @@ end
     using Accessors
 
     a = [1, 2, 3]
+    @test mapview(identity, a) === a
     ma = @inferred mapview(@optic(_ + 1), a)
     @test ma == [2, 3, 4]
     @test ma isa AbstractVector{Int}

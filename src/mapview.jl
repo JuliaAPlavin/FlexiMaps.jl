@@ -133,11 +133,10 @@ mapview(f::F, X::AbstractRange{T}) where {F, T} = isaffine(f) ? MappedRange{Core
 mapview(f, X) = MappedAny(f, X)
 mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
 
-mapview(p::Union{Symbol,Int,String}, A) = mapview(PropertyLens(p), A)
-# disambiguate:
-mapview(p::Union{Symbol,Int,String}, A::AbstractArray) = mapview(PropertyLens(p), A)
-mapview(p::Union{Symbol,Int,String}, A::AbstractRange) = mapview(PropertyLens(p), A)
-mapview(p::Union{Symbol,Int,String}, A::_MTT) = mapview(PropertyLens(p), A)
+for AT in (Any, AbstractArray, AbstractRange, _MTT)
+    @eval mapview(p::Union{Symbol,Int,String}, A::$AT) = mapview(PropertyLens(p), A)
+    @eval mapview(p::typeof(identity), A::$AT) = A
+end
 
 islinear(f) = false
 islinear(f::Union{typeof.((deg2rad, rad2deg, -, +))...}) = true
