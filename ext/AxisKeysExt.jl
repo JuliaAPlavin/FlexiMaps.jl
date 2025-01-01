@@ -23,6 +23,6 @@ end
 end
 
 @inline Base.@propagate_inbounds (A::MA_KA)(args...) = getkey(A, args...)
-@inline Base.@propagate_inbounds (A::MA_KA)(;kw...) = getkey(A; kw...)
+@inline Base.@propagate_inbounds (A::MA_KA)(;kw...) = getkey(A, nothing; kw...)
 
 end
