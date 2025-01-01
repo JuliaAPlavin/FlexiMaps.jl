@@ -113,6 +113,11 @@ end
     using StaticArrays
     using JLArrays: jl
 
+    Base.delete_method.(filter(
+        m -> nameof(m.module) == :SparseArrays && m.sig == Tuple{typeof(vcat), Union{Number,AbstractVecOrMat{<:Number}}, Vararg{Union{Number,AbstractVecOrMat{<:Number}}}},
+        methods(vcat)
+    ))
+
     @test @inferred(flatten([1:1, 1:2, 1:3]))::Vector{Int} == [1, 1,2, 1,2,3]
     @test flatten(Any[1:1, 1:2, 1:3])::Vector{Int} == [1, 1,2, 1,2,3]
     out = Int[]
