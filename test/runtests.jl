@@ -411,8 +411,6 @@ end
     using Accessors
     using IntervalSets
 
-    Accessors.set(obj, ::typeof(ustrip), val) = val * unit(obj)
-
     let
         r = maprange(identity, 1, 10, length=5)
         @test r ≈ range(1, 10, length=5)
