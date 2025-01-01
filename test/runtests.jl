@@ -351,6 +351,8 @@ end
     ma[:c] = 11
     @test a == dictionary([:a => 1, :b => 20, :c => 10])
     @test ma == dictionary([:a => 2, :b => 21, :c => 11])
+
+    @test (@inferred mapview(identity, a)) == a
 end
 
 @testitem "mapview - iterators" begin
