@@ -16,7 +16,11 @@ include("mapview.jl")
 include("flatmap.jl")
 include("mapaccessors.jl")
 
-
+# potential alternative?..
+# function _eltype(iter)
+#     T = eltype(iter)
+#     return T === Any ? Base.@default_eltype(iter) : T
+# end
 _eltype(::T) where {T} = _eltype(T)
 _eltype(::Type{Union{}}) = Union{}
 function _eltype(::Type{T}) where {T}
