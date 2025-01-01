@@ -401,6 +401,14 @@ end
     @test rng == 0:100:1000
     @test step(rng) === 100
 
+    rng = mapview((@o u"cm"(_)), (0:10)u"m")::AbstractRange
+    @test rng == (0:100:1000)*u"cm"
+    @test step(rng) === 100u"cm"
+
+    rng = mapview((@o _ |> u"cm"), (0:10)u"m")::AbstractRange
+    @test rng == (0:100:1000)*u"cm"
+    @test step(rng) === 100u"cm"
+
     rng = mapview(x -> x + 1, 0:10)::MappedArray
     @test rng == map(x->x+1, 0:10)
 
