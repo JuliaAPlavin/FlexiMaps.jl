@@ -254,6 +254,10 @@ end
     @test ma == [21, 31]
     @test_broken parentindices(ma) == (2:3,)  # should it work? how to reconcile with parent()?
 
+    a = [10, 20, 30]
+    mav = view(mapview(x -> x + 1, a), 2:3)
+    @test mav == [21, 31]
+
     @testset "find" begin
         ma = mapview(@optic(_ * 10), [1, 2, 2, 2, 3, 4])
         @test findfirst(==(30), ma) == 5
