@@ -112,7 +112,9 @@ function flatmap_parent(f::F, A) where {F}
     T = _eltype(_eltype(Am))
     it = iterate(A)
     if isnothing(it)
-        return _empty_from_type(_eltype(A), T)
+        # base the empty result on the type of f's output (like flatten does), not of A's elements,
+        # so it matches the container type produced by the non-empty branch below
+        return _empty_from_type(_eltype(Am), T)
     end
     afirst, state = it
     amfirst, mstate = iterate(Am)

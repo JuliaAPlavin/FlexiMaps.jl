@@ -190,6 +190,19 @@ end
     @test @inferred(flatmap_parent(av -> 2 .* av, (av for av in avs)))::Vector{Int} == 2 .* a
     @test @inferred(flatmap_parent(av -> StructArray(x=2 .* av), avs)).x == 2 .* a
 
+    let
+        nonempty = @inferred flatmap_parent(av -> 2 .* av, avs)
+        empty_ = @inferred flatmap_parent(av -> 2 .* av, avs[1:0])
+        @test empty_ == []
+        @test typeof(empty_) == typeof(nonempty)
+    end
+    let
+        nonempty = @inferred flatmap_parent(av -> StructArray(x=2 .* av), avs)
+        empty_ = @inferred flatmap_parent(av -> StructArray(x=2 .* av), avs[1:0])
+        @test empty_.x == []
+        @test typeof(empty_) == typeof(nonempty)
+    end
+
     @test_throws "same parent" flatmap_parent(av -> 2 .* av, collect.(avs))
     @test_throws "must be covered" flatmap_parent(av -> 2 .* av, avs[1:1])
 
