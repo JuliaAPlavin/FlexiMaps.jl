@@ -112,8 +112,7 @@ function flatmap_parent(f::F, A) where {F}
     T = _eltype(_eltype(Am))
     it = iterate(A)
     if isnothing(it)
-        # base the empty result on the type of f's output (like flatten does), not of A's elements,
-        # so it matches the container type produced by the non-empty branch below
+        # like flatten: empty result follows f's output type
         return _empty_from_type(_eltype(Am), T)
     end
     afirst, state = it
@@ -165,5 +164,6 @@ _empty_from_type(::Type{Union{}}, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{<:AbstractRange}, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{AT}, ::Type{T}) where {AT <: AbstractArray, T} = isconcretetype(AT) ? similar(similar(AT, 0), T) : T[]
 
-# type piracy: Base only defines similar(::SubArray, T, dims) at the instance level (subarray.jl), not the type level needed above; remove once Base gains this
-Base.similar(::Type{<:SubArray{<:Any, <:Any, P}}, dims::Dims) where {P} = similar(P, dims)
+# type piracy: mirrors Base's instance-level similar(::SubArray, T, dims) (subarray.jl) at the type level, via an empty parent instance; remove once Base gains this
+Base.similar(::Type{<:SubArray{T, <:Any, P}}, dims::Dims) where {T, P} =
+    similar(similar(P, ntuple(Returns(0), ndims(P))), T, dims)

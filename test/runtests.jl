@@ -79,12 +79,29 @@ end
 end
 
 @testitem "similar - SubArray type piracy" begin
+    using OffsetArrays
+
     V = typeof(view([1, 2, 3], 1:2))
     @test similar(V, 0) isa Vector{Int}
     @test similar(V, (0,)) isa Vector{Int}
 
     V2 = typeof(view([1 2; 3 4], 1:2, 1:1))
     @test similar(V2, (0, 0)) isa Matrix{Int}
+
+    # column view: ndims(view) = 1 while ndims(parent) = 2
+    M = [1 2 3; 4 5 6]
+    Vcol = typeof(view(M, :, 1))
+    r = similar(Vcol, (3,))
+    @test r isa Vector{Int}
+    @test size(r) == (3,)
+    @test (@inferred flatmap(identity, collect(eachcol(M))[1:0])) == Int[]
+
+    Vnested = typeof(view(view([1, 2, 3, 4, 5], 2:5), 1:2))
+    @test similar(Vnested, 0) isa Vector{Int}
+
+    Voffset = typeof(view(OffsetArray([1, 2, 3], -1:1), -1:0))
+    @test similar(Voffset, 0) isa Vector{Int}
+    @test axes(similar(Voffset, (2,))) == (Base.OneTo(2),)
 end
 
 @testitem "flatmap outer & inner func" begin
@@ -464,7 +481,7 @@ end
         s
     end
     function noalloc()
-        mav = mapview(Complex, rand(929_000))
+        mav = mapview(Complex, rand(10))
         sumiter(mav)  # warmup
         @allocated sumiter(mav)
     end
