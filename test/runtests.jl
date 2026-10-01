@@ -290,6 +290,34 @@ end
     end
 end
 
+@testitem "mapview - aliasing" begin
+    using FlexiMaps: MappedArray
+
+    v = [1, 2, 3, 4]
+    m = mapview(-, v)
+    @test Base.mightalias(m, v)
+    @test Base.mightalias(view(m, 2:3), v)
+    @test !Base.mightalias(m, [1, 2, 3, 4])
+    @test Base.dataids(m) == Base.dataids(v)
+    @test Base.dataids(mapview(x -> x^2, 1:4)) == ()
+
+    mc = Base.unaliascopy(m)
+    @test mc::typeof(m) == [-1, -2, -3, -4]
+    @test !Base.mightalias(mc, v)
+
+    m .= view(v, 4:-1:1)
+    @test v == [-4, -3, -2, -1]
+    @test m == [4, 3, 2, 1]
+
+    v = [1, 2, 3, 4]
+    v .= view(mapview(-, v), 4:-1:1)
+    @test v == [-4, -3, -2, -1]
+
+    v = [1, 2, 3, 4]
+    v .= mapview(-, v) .+ 10
+    @test v == [9, 8, 7, 6]
+end
+
 @testitem "mapview - KeyedArray" begin
     using FlexiMaps: MappedArray
     using AxisKeys

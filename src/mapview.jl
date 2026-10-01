@@ -18,6 +18,9 @@ Base.@propagate_inbounds _setindex!(A::MappedArray, v, I::Tuple) = (parent(A)[I.
 Base.push!(A::MappedArray, v) = (push!(parent(A), inverse(_f(A))(v)); A)
 Base.append!(A::MappedArray, iter) = (append!(parent(A), map(inverse(_f(A)), iter)); A)
 
+Base.dataids(A::MappedArray) = Base.dataids(parent(A))
+Base.unaliascopy(A::MappedArray) = typeof(A)(_f(A), Base.unaliascopy(parent(A)))
+
 
 struct MappedRange{T, F, TX <: AbstractRange} <: AbstractRange{T}
     f::F
