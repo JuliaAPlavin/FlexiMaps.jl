@@ -2,8 +2,8 @@ struct MappedArray{T, N, F, TX <: AbstractArray{<:Any, N}} <: AbstractArray{T, N
     f::F
     parent::TX
 end
-MappedArray{T, N}(f, X) where {T, N} = MappedArray{T, N, typeof(f), typeof(X)}(f, X)
-MappedArray{T}(f, X::AbstractArray{<:Any, N}) where {T, N} = MappedArray{T, N, typeof(f), typeof(X)}(f, X)
+MappedArray{T, N}(f, X) where {T, N} = MappedArray{T, N, Core.Typeof(f), typeof(X)}(f, X)
+MappedArray{T}(f, X::AbstractArray{<:Any, N}) where {T, N} = MappedArray{T, N, Core.Typeof(f), typeof(X)}(f, X)
 Accessors.constructorof(::Type{<:MappedArray}) = mapview
 parent_type(::Type{<:MappedArray{T, N, F, TX}}) where {T, N, F, TX} = TX
 
@@ -26,7 +26,7 @@ struct MappedRange{T, F, TX <: AbstractRange} <: AbstractRange{T}
     f::F
     parent::TX
 end
-MappedRange{T}(f, X) where {T} = MappedRange{T, typeof(f), typeof(X)}(f, X)
+MappedRange{T}(f, X) where {T} = MappedRange{T, Core.Typeof(f), typeof(X)}(f, X)
 Accessors.constructorof(::Type{<:MappedRange}) = mapview
 parent_type(::Type{<:MappedRange{<:Any, <:Any, TX}}) where {TX} = TX
 Base.step(A::MappedRange) =
@@ -40,6 +40,8 @@ Base.last(A::MappedRange) = _f(A)(last(parent(A)))
 struct MappedAny{F, TX}
     f::F
     parent::TX
+    MappedAny{F, TX}(f, X) where {F, TX} = new{F, TX}(f, X)
+    MappedAny(f, X) = new{Core.Typeof(f), typeof(X)}(f, X)
 end
 parent_type(::Type{MappedAny{F, TX}}) where {F, TX} = TX
 

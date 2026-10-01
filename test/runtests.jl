@@ -396,6 +396,50 @@ end
     @test ma == [2, 21, 4]
 end
 
+@testitem "mapview - callable is a type" begin
+    using FlexiMaps: MappedArray, MappedRange, MappedAny
+
+    struct P{T}
+        x::T
+    end
+
+    ma = @inferred mapview(Complex, [1, 2])
+    @test ma isa MappedArray{Complex{Int}, 1, Type{Complex}}
+    @test (@inferred ma[1]) == 1 + 0im
+    @test ma == [1 + 0im, 2 + 0im]
+
+    mp = @inferred mapview(P, [1, 2])
+    @test mp isa MappedArray{P{Int}, 1, Type{P}}
+    @test (@inferred mp[1]) == P(1)
+    @test mp == [P(1), P(2)]
+
+    # mapview only routes to MappedRange for affine f, which a bare type never is: construct directly
+    mr = @inferred MappedRange{ComplexF64}(Complex, 1:3)
+    @test mr isa MappedRange{ComplexF64, Type{Complex}}
+    @test (@inferred first(mr)) == 1 + 0im
+    @test (@inferred last(mr)) == 3 + 0im
+    @test collect(mr) == [1 + 0im, 2 + 0im, 3 + 0im]
+
+    mg = mapview(Complex, (x for x in [1, 2, 3]))
+    @test mg isa MappedAny{Type{Complex}}
+    @test (@inferred eltype(mg)) == Complex{Int}
+    @test collect(mg) == [1 + 0im, 2 + 0im, 3 + 0im]
+
+    function sumiter(A)
+        s = 0.0 + 0.0im
+        for x in A
+            s += x
+        end
+        s
+    end
+    function noalloc()
+        mav = mapview(Complex, rand(929_000))
+        sumiter(mav)  # warmup
+        @allocated sumiter(mav)
+    end
+    @test noalloc() == 0
+end
+
 @testitem "mapview - ranges" begin
     using FlexiMaps: MappedArray
     using Accessors
