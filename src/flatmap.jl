@@ -164,3 +164,6 @@ _empty_from_type(::Type, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{Union{}}, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{<:AbstractRange}, ::Type{T}) where {T} = T[]
 _empty_from_type(::Type{AT}, ::Type{T}) where {AT <: AbstractArray, T} = isconcretetype(AT) ? similar(similar(AT, 0), T) : T[]
+
+# type piracy: Base only defines similar(::SubArray, T, dims) at the instance level (subarray.jl), not the type level needed above; remove once Base gains this
+Base.similar(::Type{<:SubArray{<:Any, <:Any, P}}, dims::Dims) where {P} = similar(P, dims)

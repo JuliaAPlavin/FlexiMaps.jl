@@ -51,6 +51,15 @@ end
     @test @inferred(flatmap(i -> collect(1:i), [1][1:0]))::Vector{Int} == []
     @test @inferred(flatmap(i -> (j for j in 1:i), (i for i in 1:0)))::Vector{Int} == []
 
+    @test @inferred(flatmap(ix -> @view(ix[begin:end-1]), Vector{Int}[]))::Vector{Int} == []
+    let f = av -> StructArray(x = @view(av[begin:end-1]))
+        nonempty = @inferred flatmap(f, [[1, 2, 3], [4, 5]])
+        @test nonempty.x == [1, 2, 4]
+        empty_ = @inferred flatmap(f, Vector{Int}[])
+        @test empty_.x == []
+        @test typeof(empty_) == typeof(nonempty)
+    end
+
     X = [(a=[1, 2],), (a=[3, 4],)]
     out = Int[]
     @test flatmap!(x -> x.a, out, X) === out == [1, 2, 3, 4]
@@ -67,6 +76,15 @@ end
     en = enumerate([])
     @test flatmap(((i, x),) -> 1:x, en) == []
     @test flatmap(((i, x),) -> i < 2 ? Vector{Int}(1:x) : Vector{Any}(1:x), en) == []
+end
+
+@testitem "similar - SubArray type piracy" begin
+    V = typeof(view([1, 2, 3], 1:2))
+    @test similar(V, 0) isa Vector{Int}
+    @test similar(V, (0,)) isa Vector{Int}
+
+    V2 = typeof(view([1 2; 3 4], 1:2, 1:1))
+    @test similar(V2, (0, 0)) isa Matrix{Int}
 end
 
 @testitem "flatmap outer & inner func" begin
@@ -649,7 +667,7 @@ end
 
 @testitem "_" begin
     import Aqua
-    Aqua.test_all(FlexiMaps; ambiguities=false)
+    Aqua.test_all(FlexiMaps; ambiguities=false, piracies=(; treat_as_own=[SubArray]))
     Aqua.test_ambiguities(FlexiMaps)
 
     import CompatHelperLocal as CHL
