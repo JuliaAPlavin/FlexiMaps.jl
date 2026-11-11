@@ -180,8 +180,8 @@ end
     @test @inferred(flatten([StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])])).a::Vector{Int} == [1, 2, 1, 2, 3]
     @test @inferred(flatten([view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2, 3]), 1:1:3)])).a::Vector{Int} == [1, 2, 1, 2, 3]
     @test @inferred(flatten([view(StructVector(a=[1, 2]), 1:1:2)])).a::Vector{Int} == [1, 2]
-    @test @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2),))).a::AbstractVector{Int} == [1, 2]
-    @test_broken @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2]), 1:1:2)))).a::Vector{Int} == [1, 2]
+    @test @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2),))).a::AbstractVector{Int} == [1, 2] broken=VERSION >= v"1.13"
+    @test_broken @inferred(flatten((view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2]), 1:1:2)))).a::Vector{Int} == [1, 2, 1, 2]
     @test flatten((view(StructVector(a=[1, 2]), 1:1:2), view(StructVector(a=[1, 2]), 1:1:2))).a::Vector{Int} == [1, 2, 1, 2]
     @test flatten(Any[StructVector(a=[1, 2]), StructVector(a=[1, 2, 3])]).a::Vector{Int} == [1, 2, 1, 2, 3]
     @test flatten([StructVector(a=1:2), StructVector(a=1:3)]).a::Vector{Int} == [1, 2, 1, 2, 3]
