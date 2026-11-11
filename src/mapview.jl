@@ -22,21 +22,6 @@ Base.dataids(A::MappedArray) = Base.dataids(parent(A))
 Base.unaliascopy(A::MappedArray) = typeof(A)(_f(A), Base.unaliascopy(parent(A)))
 
 
-struct MappedRange{T, F, TX <: AbstractRange} <: AbstractRange{T}
-    f::F
-    parent::TX
-end
-MappedRange{T}(f, X) where {T} = MappedRange{T, Core.Typeof(f), typeof(X)}(f, X)
-Accessors.constructorof(::Type{<:MappedRange}) = mapview
-parent_type(::Type{<:MappedRange{<:Any, <:Any, TX}}) where {TX} = TX
-Base.step(A::MappedRange) =
-    islinear(_f(A)) ?
-        _f(A)(step(parent(A))) :  # linear
-        _f(A)(first(parent(A)) + step(parent(A))) - _f(A)(first(parent(A)))  # affine
-Base.first(A::MappedRange) = _f(A)(first(parent(A)))
-Base.last(A::MappedRange) = _f(A)(last(parent(A)))
-
-
 struct MappedAny{F, TX}
     f::F
     parent::TX
@@ -58,7 +43,7 @@ Base.eltype(A::MappedAny) = Core.Compiler.return_type(_f(A), Tuple{_eltype(paren
 end
 
 
-const _MTT = Union{MappedArray, MappedRange, MappedAny}
+const _MTT = Union{MappedArray, MappedAny}
 Base.parent(A::_MTT) = getfield(A, :parent)
 _f(A::_MTT) = getfield(A, :f)
 Base.size(A::_MTT) = size(parent(A))
@@ -116,9 +101,11 @@ end
 Like `map(f, X)` but doesn't materialize the result and returns a view.
 
 Works on arrays, `Dictionaries.jl` dictionaries, and arbitrary iterables. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
+
+For a range and `f` known to be affine, returns a regular range instead of a view.
 """
 mapview(f::F, X::AbstractArray{T, N}) where {F, T, N} = MappedArray{Core.Compiler.return_type(f, Tuple{T}), N}(f, X)
-mapview(f::F, X::AbstractRange{T}) where {F, T} = isaffine(f) ? MappedRange{Core.Compiler.return_type(f, Tuple{T})}(f, X) : @invoke mapview(f, X::AbstractVector{T})
+mapview(f::F, X::AbstractRange{T}) where {F, T} = isaffine(f) ? _mapview_range(f, X) : @invoke mapview(f, X::AbstractVector{T})
 mapview(f, X) = MappedAny(f, X)
 mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
 
@@ -129,14 +116,17 @@ end
 
 islinear(f) = false
 islinear(f::Union{typeof.((deg2rad, rad2deg, -, +))...}) = true
-islinear(f::Base.Fix1{<:Union{typeof.((*,))...}}) = true
-islinear(f::Base.Fix2{<:Union{typeof.((*, /))...}}) = true
+islinear(f::Base.Fix1{<:Union{typeof.((*,))...}, <:Number}) = true
+islinear(f::Base.Fix2{<:Union{typeof.((*, /))...}, <:Number}) = true
 islinear(f::ComposedFunction) = islinear(f.inner) && islinear(f.outer)
 
 isaffine(f) = islinear(f)
-isaffine(f::Base.Fix1{<:Union{typeof.((-, +))...}}) = true
-isaffine(f::Base.Fix2{<:Union{typeof.((-, +))...}}) = true
+isaffine(f::Base.Fix1{<:Union{typeof.((-, +))...}, <:Number}) = true
+isaffine(f::Base.Fix2{<:Union{typeof.((-, +))...}, <:Number}) = true
 isaffine(f::ComposedFunction) = isaffine(f.inner) && isaffine(f.outer)
+
+_mapview_range(f, X) = StepRangeLen(f(first(X)), islinear(f) ? f(step(X)) : f(first(X) + step(X)) - f(first(X)), length(X))
+_mapview_range(f, X::LinRange) = LinRange(f(first(X)), f(last(X)), length(X))
 
 
 """

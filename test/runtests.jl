@@ -437,7 +437,7 @@ end
 end
 
 @testitem "mapview - callable is a type" begin
-    using FlexiMaps: MappedArray, MappedRange, MappedAny
+    using FlexiMaps: MappedArray, MappedAny
 
     struct P{T}
         x::T
@@ -452,13 +452,6 @@ end
     @test mp isa MappedArray{P{Int}, 1, Type{P}}
     @test (@inferred mp[1]) == P(1)
     @test mp == [P(1), P(2)]
-
-    # mapview only routes to MappedRange for affine f, which a bare type never is: construct directly
-    mr = @inferred MappedRange{ComplexF64}(Complex, 1:3)
-    @test mr isa MappedRange{ComplexF64, Type{Complex}}
-    @test (@inferred first(mr)) == 1 + 0im
-    @test (@inferred last(mr)) == 3 + 0im
-    @test collect(mr) == [1 + 0im, 2 + 0im, 3 + 0im]
 
     mg = mapview(Complex, (x for x in [1, 2, 3]))
     @test mg isa MappedAny{Type{Complex}}
@@ -483,6 +476,7 @@ end
 @testitem "mapview - ranges" begin
     using FlexiMaps: MappedArray
     using Accessors
+    using Dates
     using Unitful
 
     rng = mapview(deg2rad, 0:90:360)::AbstractRange
@@ -526,6 +520,34 @@ end
 
     rng = mapview(@optic(_ ^ 2), 0:10)::MappedArray
     @test rng == map(x->x^2, 0:10)
+
+    @test @inferred(mapview(@optic(_ + 1), 1:5))::AbstractRange == 2:6
+    @test mapview(@optic(_ - 1), 1:5)::AbstractRange == 0:4
+    @test mapview(Base.Fix1(-, 7), 1:5)::AbstractRange == 6:-1:2
+    @test mapview(-, 1:5)::AbstractRange == -1:-1:-5
+    @test mapview(+, 1:5)::AbstractRange == 1:5
+    @test @inferred(mapview(@optic(_ * 2), 1:5))::AbstractRange == 2:2:10
+    @test mapview(Base.Fix1(*, 2), 1:5)::AbstractRange == 2:2:10
+    @test mapview(@optic(_ * 0), 1:3)::AbstractRange == [0, 0, 0]
+    @test @inferred(mapview(@optic(_ / 2), 1:5))::AbstractRange == 0.5:0.5:2.5
+    @test @inferred(mapview(@optic((_ + 1) / 2), 0:10))::AbstractRange == 0.5:0.5:5.5
+    @test mapview(@optic(_ + 1), typemax(Int)-1:typemax(Int))::AbstractRange == [typemax(Int), typemin(Int)]
+
+    @test @inferred(mapview(@optic(_ * 0.5), LinRange(0.0, 1.0, 5))) === LinRange(0.0, 0.5, 5)
+    @test mapview(@optic((_ + 1) * 0.5), LinRange(0.0, 1.0, 5)) === LinRange(0.5, 1.0, 5)
+
+    # step stays exact far from zero
+    @test step(@inferred(mapview(deg2rad, 10^6:10^6+1000))) == deg2rad(1)
+    @test step(mapview(rad2deg, 10^6:10^6+1000)) == rad2deg(1)
+    @test step(@inferred(mapview(deg2rad ∘ Base.Fix2(*, 2), 10^6:10^6+1000))) == deg2rad(2)
+
+    # non-numeric constants aren't necessarily evenly spaced
+    rng = mapview(@optic(_ + Month(1)), Date(2020, 1, 29):Day(1):Date(2020, 2, 3))::MappedArray
+    @test rng == Date.(2020, [2, 2, 2, 3, 3, 3], [29, 29, 29, 1, 2, 3])
+    rng = mapview(@optic(_ + Day(1)), Date(2020, 1, 31):Month(1):Date(2020, 4, 30))::MappedArray
+    @test rng == Date.(2020, [2, 3, 4, 5], [1, 1, 1, 1])
+    rng = mapview(@optic(_ * "s"), 'a':'c')::MappedArray
+    @test rng == ["as", "bs", "cs"]
 end
 
 @testitem "maprange" begin
