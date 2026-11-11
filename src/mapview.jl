@@ -114,20 +114,6 @@ function Base.:(==)(A::MappedAny, B::Union{AbstractArray, MappedAny})
     return anymissing ? missing : true
 end
 
-Base.findfirst(pred::Function, A::MappedArray) = _findfirst(pred, A, inverse(_f(A)))
-_findfirst(pred, A, ::NoInverse) = Base.@invoke findfirst(pred::typeof(pred), A::AbstractArray)
-_findfirst(pred::Union{Base.Fix2{typeof(isequal)}, Base.Fix2{typeof(==)}}, A, invf::Function) = findfirst(pred.f(invf(pred.x)), parent(A))
-
-Base.searchsortedfirst(A::MappedArray{<:Any, 1}, v; kwargs...) = _searchsortedfirst(A, v, inverse(_f(A)); kwargs...)
-_searchsortedfirst(A, v, ::NoInverse; kwargs...) = Base.@invoke searchsortedfirst(A::AbstractVector, v::typeof(v); kwargs...)
-_searchsortedfirst(A, v, invf::Function; rev=false) = searchsortedfirst(parent(A), invf(v); rev=_is_increasing(_f(A)) ? rev : !rev)
-Base.searchsortedlast(A::MappedArray{<:Any, 1}, v; kwargs...) = _searchsortedlast(A, v, inverse(_f(A)); kwargs...)
-_searchsortedlast(A, v, ::NoInverse; kwargs...) = Base.@invoke searchsortedlast(A::AbstractVector, v::typeof(v); kwargs...)
-_searchsortedlast(A, v, invf::Function; rev=false) = searchsortedlast(parent(A), invf(v); rev=_is_increasing(_f(A)) ? rev : !rev)
-
-# only called for invertible functions: they are either increasing or decreasing
-_is_increasing(f) = f(2) < f(3)
-
 """    mapview(f, X)
 
 Like `map(f, X)` but doesn't materialize the result and returns a view.

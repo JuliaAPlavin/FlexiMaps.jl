@@ -316,32 +316,6 @@ end
     @test ma == a .+ 1
     ma[2] = 50.
     @test a == [10, 49, 30]
-
-    @testset "find" begin
-        ma = mapview(@optic(_ * 10), [1, 2, 2, 2, 3, 4])
-        @test findfirst(==(30), ma) == 5
-        @test findfirst(==(35), ma) |> isnothing
-        @test searchsortedfirst(ma, 20) == 2
-        @test searchsortedlast(ma, 20) == 4
-        @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
-        @test searchsortedlast(reverse(ma), 20; rev=true) == 5
-
-        ma = mapview(x -> x * 10, [1, 2, 2, 2, 3, 4])
-        @test findfirst(==(30), ma) == 5
-        @test findfirst(==(35), ma) |> isnothing
-        @test searchsortedfirst(ma, 20) == 2
-        @test searchsortedlast(ma, 20) == 4
-        @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
-        @test searchsortedlast(reverse(ma), 20; rev=true) == 5
-
-        ma = mapview(@optic(_ * -10), .- [1, 2, 2, 2, 3, 4])
-        @test findfirst(==(30), ma) == 5
-        @test findfirst(==(35), ma) |> isnothing
-        @test searchsortedfirst(ma, 20) == 2
-        @test searchsortedlast(ma, 20) == 4
-        @test searchsortedfirst(reverse(ma), 20; rev=true) == 3
-        @test searchsortedlast(reverse(ma), 20; rev=true) == 5
-    end
 end
 
 @testitem "mapview - aliasing" begin
