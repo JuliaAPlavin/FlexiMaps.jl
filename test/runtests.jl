@@ -389,6 +389,19 @@ end
     @test msa.x === sa.x
     msa[1] = (y=:d, x=10)
     @test sa == StructArray(x=[10, 2, 3], y=[:d, :b, :c])
+
+    # property that isn't a column
+    struct WithComputed
+        x::Int
+    end
+    Base.getproperty(w::WithComputed, p::Symbol) = p === :doubled ? 2 * getfield(w, :x) : getfield(w, p)
+    sa = StructArray([WithComputed(1), WithComputed(2)])
+    @test mapview(@optic(_.x), sa) === StructArrays.components(sa).x
+    @test (@inferred mapview(@optic(_.doubled), sa)) == [2, 4]
+    @test mapview(@optic(_.doubled + 1), sa) == [3, 5]
+
+    sa = StructArray([(1, 2), (3, 4)])
+    @test mapview(Accessors.PropertyLens(2), sa) === StructArrays.components(sa)[2]
 end
 
 @testitem "mapview - Dictionaries" begin
