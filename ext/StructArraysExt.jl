@@ -8,24 +8,20 @@ const _FUNCS = Union{
     IndexLens{<:Tuple{Integer}},
     typeof(first),typeof(last)
 }
-mapview(
-    o::_FUNCS,
-    A::StructArray
-) = o(StructArrays.components(A))
-
-mapview(f::ComposedFunction{<:Any, <:_FUNCS}, x::StructArray) = mapview(f.outer, mapview(f.inner, x))
-
 # properties without a column, eg computed in getproperty, go through the generic method
-_hascolumn(A::StructArray, ::PropertyLens{P}) where {P} =
+_hascolumn(o, A) = true
+_hascolumn(::PropertyLens{P}, A) where {P} =
     P isa Symbol ?
         hasfield(typeof(StructArrays.components(A)), P) :
-        1 <= P <= length(StructArrays.components(A))
-mapview(o::PropertyLens, A::StructArray) =
-    _hascolumn(A, o) ?
+        1 <= P <= fieldcount(typeof(StructArrays.components(A)))
+
+mapview(o::_FUNCS, A::StructArray) =
+    _hascolumn(o, A) ?
         o(StructArrays.components(A)) :
         @invoke mapview(o::Any, A::AbstractArray)
-mapview(f::ComposedFunction{<:Any, <:PropertyLens}, A::StructArray) =
-    _hascolumn(A, f.inner) ?
+
+mapview(f::ComposedFunction{<:Any, <:_FUNCS}, A::StructArray) =
+    _hascolumn(f.inner, A) ?
         mapview(f.outer, mapview(f.inner, A)) :
         @invoke mapview(f::Any, A::AbstractArray)
 
