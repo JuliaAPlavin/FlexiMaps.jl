@@ -124,7 +124,6 @@ mapview(f, X::_MTT) = mapview(f ∘ _f(X), parent(X))
 
 for AT in (Any, AbstractArray, AbstractRange, _MTT)
     # remember to add the corresponding methods to DictionariesExt for disambiguation
-    @eval mapview(p::Union{Symbol,Int,String}, A::$AT) = mapview(PropertyLens(p), A)
     @eval mapview(p::typeof(identity), A::$AT) = A
 end
 

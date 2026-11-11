@@ -280,8 +280,8 @@ end
     @test ma == [21, 31, 11, 101]
 
     ma = @inferred mapview(x -> (; x=x + 1), a)
-    @test mapview(:x, ma)::MappedArray{Int} == [21, 31, 11, 101]
-    @test parent(mapview(:x, ma)) === parent(ma) === a
+    @test mapview(@optic(_.x), ma)::MappedArray{Int} == [21, 31, 11, 101]
+    @test parent(mapview(@optic(_.x), ma)) === parent(ma) === a
 
     # multiple arrays - not implemented
     # ma = @inferred mapview((x, y) -> x + y, 1:3, [10, 20, 30])
@@ -377,7 +377,6 @@ end
 
     sa = StructArray(x=[1, 2, 3], y=[:a, :b, :c])
     msa = @inferred mapview(@optic(_.x), sa)
-    @test msa === mapview(:x, sa)
     @test msa === sa.x
     @test mapview(@optic(_[:x]), sa) == sa.x
     @test mapview(@optic(_[2]), sa) === sa.y
