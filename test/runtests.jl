@@ -251,6 +251,7 @@ end
 @testitem "mapview - arrays" begin
     using FlexiMaps: MappedArray
     using Accessors
+    using StaticArrays
 
     a = [1, 2, 3]
     @test mapview(identity, a) === a
@@ -316,6 +317,31 @@ end
     @test ma == a .+ 1
     ma[2] = 50.
     @test a == [10, 49, 30]
+
+    ma = mapview(x -> x + 1, [1, 2, 3])
+    @test (@inferred map(x -> 2x, ma)) == [4, 6, 8]
+    @test (@inferred map(abs ∘ -, ma)) == [2, 3, 4]
+    @test (@inferred map(Float64, ma))::Vector{Float64} == [2, 3, 4]
+    @test map(Any[x -> 2x][1], ma) == [4, 6, 8]
+    @test map(Function[abs ∘ -][1], ma) == [2, 3, 4]
+    @test (@inferred filter(>(2), ma)) == [3, 4]
+    @test (@inferred filter(iseven ∘ abs, ma)) == [2, 4]
+    @test filter(Any[>(2)][1], ma) == [3, 4]
+    @test filter(Bool, mapview(x -> x > 1, [1, 2, 3])) == [true, true]
+
+    # map on a large SVector only avoids allocating if inlined or specialized on f
+    function summaps(f::F, vs) where {F}
+        s = 0.0
+        for v in vs
+            s += sum(map(f, v))
+        end
+        s
+    end
+    svs = fill(mapview(x -> x + 1.0, SVector{64}(1.0:64.0)), 3)
+    @test summaps(x -> 2x, svs) == 12864
+    allocs(f::F, vs) where {F} = @allocated summaps(f, vs)
+    allocs(abs, svs)
+    @test allocs(abs, svs) == 0
 end
 
 @testitem "mapview - aliasing" begin

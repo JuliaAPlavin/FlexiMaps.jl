@@ -44,8 +44,8 @@ end
 
 
 const _MTT = Union{MappedArray, MappedAny}
-Base.parent(A::_MTT) = getfield(A, :parent)
-_f(A::_MTT) = getfield(A, :f)
+@inline Base.parent(A::_MTT) = getfield(A, :parent)
+@inline _f(A::_MTT) = getfield(A, :f)
 Base.size(A::_MTT) = size(parent(A))
 Base.length(A::_MTT) = length(parent(A))
 Base.IndexStyle(::Type{MT}) where {MT <: _MTT} = IndexStyle(parent_type(MT))
@@ -58,9 +58,9 @@ Base.keytype(A::_MTT) = keytype(parent(A))
 Base.valtype(A::_MTT) = eltype(A)
 Base.reverse(A::_MTT; kwargs...) = mapview(_f(A), reverse(parent(A); kwargs...))
 
-Base.map(f, A::_MTT) = map(f ∘ _f(A), parent(A))
-Base.collect(A::_MTT) = map(_f(A), parent(A))
-Base.filter(f, A::_MTT) = @modify(parent(A)) do P
+@inline Base.map(f::F, A::_MTT) where {F} = map(f ∘ _f(A), parent(A))
+@inline Base.collect(A::_MTT) = map(_f(A), parent(A))
+Base.filter(f::F, A::_MTT) where {F} = @modify(parent(A)) do P
     filter(f ∘ _f(A), P)
 end
 
