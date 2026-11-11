@@ -311,6 +311,12 @@ end
     mav = view(mapview(x -> x + 1, a), 2:3)
     @test mav == [21, 31]
 
+    ma = @inferred mapview((@o convert(Float64, _ + 1)), a)
+    @test eltype(ma) == Float64
+    @test ma == a .+ 1
+    ma[2] = 50.
+    @test a == [10, 49, 30]
+
     @testset "find" begin
         ma = mapview(@optic(_ * 10), [1, 2, 2, 2, 3, 4])
         @test findfirst(==(30), ma) == 5
