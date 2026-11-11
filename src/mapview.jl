@@ -71,8 +71,11 @@ for type in (
         # mimic OffsetArrays signature
         :(Tuple{Union{Integer, AbstractUnitRange}, Vararg{Union{Integer, AbstractUnitRange}}}),
         # disambiguation with Base
-        :(Tuple{Integer, Vararg{Integer}}),
         :(Tuple{Union{Integer, Base.OneTo}, Vararg{Union{Integer, Base.OneTo}}}),
+        # Julia 1.13+ adds AbstractOneTo methods alongside the OneTo ones
+        isdefined(Base, :AbstractOneTo) ?
+            :(Tuple{Union{Integer, Base.AbstractOneTo}, Vararg{Union{Integer, Base.AbstractOneTo}}}) :
+            :(Tuple{Integer, Vararg{Integer}}),
     )
     @eval Base.similar(::Type{MT}, dims::$(type)) where {MT <: _MTT} = similar(similar(parent_type(MT), dims), eltype(MT))
     @eval Base.similar(A::_MTT, T::Type, dims::$(type)) = similar(parent(A), T, dims)
