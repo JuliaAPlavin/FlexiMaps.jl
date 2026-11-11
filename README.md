@@ -42,17 +42,14 @@ _Analogous to `flat_map` in Rust, and `SelectMany` in C#_
 - like `map(f, X)`, but works lazily, doesn't materialize the result returning a view instead.
 - like `Iterators.map(f, X)`, but with better collection support, type stability, etc.
 
-Works on different collections and arbitrary iterables. Collection types are preserved when possible for ranges, arrays, dictionaires. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
+Works on different collections and arbitrary iterables. Collection types are preserved when possible for ranges, arrays, and `Dictionaries.jl` dictionaries. Passes `length`, `keys` and others directly to the parent. Does its best to determine the resulting `eltype` without evaluating `f`. Supports both getting and setting values (through `Accessors.jl`).
 
 ```julia
 X = [1, 2, 3]
 mapview(x -> x + 1, X) == [2, 3, 4]  # a view of X, doesn't take extra memory
 
-X = Dict(:a => 1, :b => 2, :c => 3)
-mapview(x -> x + 1, X) == Dict(:a => 2, :b => 3, :c => 4)  # same with Dict
-
 X = [1, 2, 3]
-mapview(x -> x + 1, (x for x in X))  # and with iterator
+mapview(x -> x + 1, (x for x in X))  # same with iterator
 ```
 
 ```julia
