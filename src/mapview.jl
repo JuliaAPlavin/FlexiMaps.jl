@@ -93,9 +93,6 @@ for type in (
     @eval Base.similar(A::_MTT, T::Type, dims::$(type)) = similar(parent(A), T, dims)
 end
 
-Base.getproperty(A::_MTT, p::Symbol) = mapview(Accessors.PropertyLens(p), A)
-Base.getproperty(A::_MTT, p) = mapview(Accessors.PropertyLens(p), A)
-
 
 Base.:(==)(A::AbstractArray, B::MappedAny) = B == A
 function Base.:(==)(A::MappedAny, B::Union{AbstractArray, MappedAny})

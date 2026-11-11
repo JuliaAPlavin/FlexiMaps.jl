@@ -280,8 +280,8 @@ end
     @test ma == [21, 31, 11, 101]
 
     ma = @inferred mapview(x -> (; x=x + 1), a)
-    @test ma.x::MappedArray{Int} == [21, 31, 11, 101]
-    @test parent(ma.x) === parent(ma) === a
+    @test mapview(:x, ma)::MappedArray{Int} == [21, 31, 11, 101]
+    @test parent(mapview(:x, ma)) === parent(ma) === a
 
     # multiple arrays - not implemented
     # ma = @inferred mapview((x, y) -> x + y, 1:3, [10, 20, 30])
